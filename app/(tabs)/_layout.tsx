@@ -1,49 +1,23 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { router } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
-import { Pressable } from 'react-native';
 
 import { useColors } from '../../src/useColors';
 
-function AddAccessory() {
-  const placement = NativeTabs.BottomAccessory.usePlacement();
-  const c = useColors();
-  const inline = placement === 'inline';
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel="添加物品"
-      onPress={() => router.push('/asset/form')}
-      style={{
-        width: inline ? 36 : 44,
-        height: inline ? 36 : 44,
-        borderRadius: 22,
-        backgroundColor: c.lime,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginHorizontal: inline ? 6 : 10,
-      }}>
-      <SymbolView name="plus" size={inline ? 16 : 20} tintColor="#111111" />
-    </Pressable>
-  );
-}
-
 export default function TabLayout() {
   const c = useColors();
+  const screenBg = { backgroundColor: c.bg };
+
   return (
     <NativeTabs
       tintColor={c.tabSelected}
-      minimizeBehavior="onScrollDown"
+      minimizeBehavior="never"
       disableTransparentOnScrollEdge
       labelStyle={{
         default: { fontSize: 10, color: c.tabInactive },
         selected: { fontSize: 10, fontWeight: '700', color: c.tabSelected },
       }}
       iconColor={{ default: c.tabInactive, selected: c.tabSelected }}>
-      <NativeTabs.BottomAccessory>
-        <AddAccessory />
-      </NativeTabs.BottomAccessory>
-      <NativeTabs.Trigger name="index">
+      <NativeTabs.Trigger name="index" contentStyle={screenBg}>
         <NativeTabs.Trigger.Label selectedStyle={{ color: c.tabSelected }}>资产</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           sf={{ default: 'shippingbox', selected: 'shippingbox.fill' }}
@@ -51,7 +25,7 @@ export default function TabLayout() {
           selectedColor={c.tabSelected}
         />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="insights">
+      <NativeTabs.Trigger name="insights" contentStyle={screenBg}>
         <NativeTabs.Trigger.Label selectedStyle={{ color: c.tabSelected }}>洞悉</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           sf={{ default: 'chart.pie', selected: 'chart.pie.fill' }}
@@ -59,7 +33,19 @@ export default function TabLayout() {
           selectedColor={c.tabSelected}
         />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="wishlist">
+      <NativeTabs.Trigger
+        name="add"
+        disabled
+        contentStyle={screenBg}
+        listeners={{
+          tabPress: () => {
+            router.push('/asset/form');
+          },
+        }}>
+        <NativeTabs.Trigger.Label hidden>添加</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="plus.circle.fill" md="add_circle" selectedColor={c.tabSelected} />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="wishlist" contentStyle={screenBg}>
         <NativeTabs.Trigger.Label selectedStyle={{ color: c.tabSelected }}>心愿</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           sf={{ default: 'heart', selected: 'heart.fill' }}
@@ -67,7 +53,7 @@ export default function TabLayout() {
           selectedColor={c.tabSelected}
         />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="profile">
+      <NativeTabs.Trigger name="profile" contentStyle={screenBg}>
         <NativeTabs.Trigger.Label selectedStyle={{ color: c.tabSelected }}>我的</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           sf={{ default: 'person', selected: 'person.fill' }}
