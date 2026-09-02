@@ -1,70 +1,80 @@
+import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { Link, Tabs } from 'expo-router';
-import { Platform, Pressable } from 'react-native';
+import { Pressable } from 'react-native';
 
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
+import { useColors } from '../../src/useColors';
+
+function AddAccessory() {
+  const placement = NativeTabs.BottomAccessory.usePlacement();
+  const c = useColors();
+  const inline = placement === 'inline';
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="添加物品"
+      onPress={() => router.push('/asset/form')}
+      style={{
+        width: inline ? 36 : 44,
+        height: inline ? 36 : 44,
+        borderRadius: 22,
+        backgroundColor: c.lime,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginHorizontal: inline ? 6 : 10,
+      }}>
+      <SymbolView name="plus" size={inline ? 16 : 20} tintColor="#111111" />
+    </Pressable>
+  );
+}
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
+  const c = useColors();
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{
-                ios: 'chevron.left.forwardslash.chevron.right',
-                android: 'code',
-                web: 'code',
-              }}
-              tintColor={color}
-              size={28}
-            />
-          ),
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable style={{ marginRight: 15 }}>
-                {({ pressed }) => (
-                  <SymbolView
-                    name={{ ios: 'info.circle', android: 'info', web: 'info' }}
-                    size={25}
-                    tintColor={Colors[colorScheme].text}
-                    style={{ opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="two"
-        options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{
-                ios: 'chevron.left.forwardslash.chevron.right',
-                android: 'code',
-                web: 'code',
-              }}
-              tintColor={color}
-              size={28}
-            />
-          ),
-        }}
-      />
-    </Tabs>
+    <NativeTabs
+      tintColor={c.tabSelected}
+      minimizeBehavior="onScrollDown"
+      disableTransparentOnScrollEdge
+      labelStyle={{
+        default: { fontSize: 10, color: c.tabInactive },
+        selected: { fontSize: 10, fontWeight: '700', color: c.tabSelected },
+      }}
+      iconColor={{ default: c.tabInactive, selected: c.tabSelected }}>
+      <NativeTabs.BottomAccessory>
+        <AddAccessory />
+      </NativeTabs.BottomAccessory>
+      <NativeTabs.Trigger name="index">
+        <NativeTabs.Trigger.Label selectedStyle={{ color: c.tabSelected }}>资产</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          sf={{ default: 'shippingbox', selected: 'shippingbox.fill' }}
+          md="inventory_2"
+          selectedColor={c.tabSelected}
+        />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="insights">
+        <NativeTabs.Trigger.Label selectedStyle={{ color: c.tabSelected }}>洞悉</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          sf={{ default: 'chart.pie', selected: 'chart.pie.fill' }}
+          md="pie_chart"
+          selectedColor={c.tabSelected}
+        />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="wishlist">
+        <NativeTabs.Trigger.Label selectedStyle={{ color: c.tabSelected }}>心愿</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          sf={{ default: 'heart', selected: 'heart.fill' }}
+          md="favorite"
+          selectedColor={c.tabSelected}
+        />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="profile">
+        <NativeTabs.Trigger.Label selectedStyle={{ color: c.tabSelected }}>我的</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          sf={{ default: 'person', selected: 'person.fill' }}
+          md="person"
+          selectedColor={c.tabSelected}
+        />
+      </NativeTabs.Trigger>
+    </NativeTabs>
   );
 }

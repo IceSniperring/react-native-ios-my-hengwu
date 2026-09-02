@@ -1,0 +1,123 @@
+import type { Asset, AssetStatus } from './types';
+
+export function startOfDay(d: Date) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+export function parseISO(iso: string) {
+  const [y, m, day] = iso.split('-').map(Number);
+  return new Date(y, (m || 1) - 1, day || 1);
+}
+
+export function toISO(d: Date) {
+  const y = d.getFullYear();
+  const m = `${d.getMonth() + 1}`.padStart(2, '0');
+  const day = `${d.getDate()}`.padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+export function daysBetween(fromISO: string, toISO: string) {
+  const a = startOfDay(parseISO(fromISO)).getTime();
+  const b = startOfDay(parseISO(toISO)).getTime();
+  return Math.max(1, Math.round((b - a) / 86400000) + 0);
+}
+
+export function holdingDays(asset: Asset, todayISO = toISO(new Date())) {
+  const end =
+    asset.status === 'sold' && asset.soldDate
+      ? asset.soldDate
+      : asset.status === 'retired' && asset.retiredDate
+        ? asset.retiredDate
+        : todayISO;
+  return Math.max(1, daysBetween(asset.purchaseDate, end));
+}
+
+export function dailyCost(asset: Asset, todayISO = toISO(new Date())) {
+  const days = holdingDays(asset, todayISO);
+  if (asset.status === 'sold') {
+    const spent = asset.purchasePrice - (asset.soldPrice ?? 0);
+    return spent / days;
+  }
+  return asset.purchasePrice / days;
+}
+
+export function neededDays(asset: Asset) {
+  if (asset.targetDailyCost <= 0) return asset.expectedDays || 365;
+  return Math.max(1, Math.ceil(asset.purchasePrice / asset.targetDailyCost));
+}
+
+export function remainingDays(asset: Asset, todayISO = toISO(new Date())) {
+  return Math.max(0, neededDays(asset) - holdingDays(asset, todayISO));
+}
+
+export function targetProgress(asset: Asset, todayISO = toISO(new Date())) {
+  return Math.min(1, holdingDays(asset, todayISO) / neededDays(asset));
+}
+
+export function expectedFinishISO(asset: Asset) {
+  const start = parseISO(asset.purchaseDate);
+  start.setDate(start.getDate() + neededDays(asset));
+  return toISO(start);
+}
+
+export function pnl(asset: Asset) {
+  if (asset.status !== 'sold') return 0;
+  return (asset.soldPrice ?? 0) - asset.purchasePrice;
+}
+
+export function formatMoney(n: number, digits = 2) {
+  const abs = Math.abs(n);
+  const formatted = abs.toLocaleString('zh-CN', {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  });
+  return `${n < 0 ? '-' : ''}¥${formatted}`;
+}
+
+export function formatDaily(n: number) {
+  const digits = Math.abs(n) >= 10 ? 2 : 1;
+  return `${formatMoney(n, digits)}/天`;
+}
+
+export function formatCompact(n: number) {
+  if (Math.abs(n) >= 10000) {
+    return `${(n / 10000).toFixed(n >= 100000 ? 1 : 2)}万`;
+  }
+  return formatMoney(n, n % 1 === 0 ? 0 : 2);
+}
+
+export function addDaysISO(iso: string, days: number) {
+  const d = parseISO(iso);
+  d.setDate(d.getDate() + days);
+  return toISO(d);
+}
+
+export function todayISO() {
+  return toISO(new Date());
+}
+
+export function daysAgoISO(days: number) {
+  return addDaysISO(todayISO(), -days);
+}
+
+export function dailyCostHistory(asset: Asset, points = 12) {
+  const days = holdingDays(asset);
+  const start = Math.max(1, Math.min(days, Math.floor(days * 0.12) || 1));
+  const data: { day: number; value: number; date: string }[] = [];
+  const span = Math.max(1, days - start);
+  for (let p = 0; p < points; p++) {
+    const i = Math.round(start + (span * p) / (points - 1));
+    data.push({
+      day: i,
+      value: asset.purchasePrice / Math.max(1, i),
+      date: addDaysISO(asset.purchaseDate, i - 1),
+    });
+  }
+  return data;
+}
+
+export function statusColor(status: AssetStatus) {
+  if (status === 'active') return '#C8F04D';
+  if (status === 'retired') return '#F5C400';
+  return '#FF8A3A';
+}

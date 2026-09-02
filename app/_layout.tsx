@@ -1,56 +1,77 @@
-import { useFonts } from 'expo-font';
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import 'react-native-reanimated';
+import { Platform, View } from 'react-native';
 
-import { useColorScheme } from '@/components/useColorScheme';
+import { useStore } from '../src/store';
+import { useColors } from '../src/useColors';
 
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from 'expo-router';
+SplashScreen.preventAutoHideAsync();
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
   initialRouteName: '(tabs)',
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+export { ErrorBoundary } from 'expo-router';
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
-  useEffect(() => {
-    if (error) throw error;
-  }, [error]);
+  const hydrated = useStore((s) => s.hydrated);
+  const setHydrated = useStore((s) => s.setHydrated);
+  const scheme = useStore((s) => s.colorScheme);
+  const c = useColors();
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
+    const t = setTimeout(() => setHydrated(), 250);
+    return () => clearTimeout(t);
+  }, [setHydrated]);
 
-  if (!loaded) {
-    return null;
-  }
+  useEffect(() => {
+    if (hydrated) SplashScreen.hideAsync();
+  }, [hydrated]);
 
-  return <RootLayoutNav />;
-}
+  if (!hydrated) return <View style={{ flex: 1, backgroundColor: c.limeHeader }} />;
 
-function RootLayoutNav() {
-  const colorScheme = useColorScheme();
+  const nativeHeader = {
+    headerShown: true,
+    headerShadowVisible: false,
+    headerBackTitle: '返回',
+    headerTintColor: c.text,
+    headerTitleStyle: { fontWeight: '600' as const, color: c.text },
+    headerStyle: { backgroundColor: c.bg },
+    contentStyle: { backgroundColor: c.bg },
+    animation: Platform.OS === 'ios' ? ('default' as const) : ('slide_from_right' as const),
+  };
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
+    <>
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="asset/[id]" options={{ ...nativeHeader, title: '资产详情' }} />
+        <Stack.Screen
+          name="asset/form"
+          options={{ ...nativeHeader, presentation: 'modal', title: '录入资产' }}
+        />
+        <Stack.Screen
+          name="asset/sell"
+          options={{ ...nativeHeader, presentation: 'modal', title: '卖出复盘' }}
+        />
+        <Stack.Screen
+          name="search"
+          options={{
+            ...nativeHeader,
+            title: '搜索',
+            headerSearchBarOptions: {
+              placeholder: '搜资产名称',
+              hideWhenScrolling: false,
+              cancelButtonText: '取消',
+            },
+          }}
+        />
+        <Stack.Screen name="savings" options={{ ...nativeHeader, title: '智能攒钱' }} />
+        <Stack.Screen name="calendar" options={{ ...nativeHeader, title: '购入日历' }} />
       </Stack>
-    </ThemeProvider>
+    </>
   );
 }

@@ -1,31 +1,112 @@
-import { StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
+import { useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
+import { AssetCard } from '../../src/components/AssetCard';
+import { OverviewCard } from '../../src/components/OverviewCard';
+import { useFilteredAssets, useOverview } from '../../src/hooks';
+import { FilterTabs } from '../../src/native/FilterTabs';
+import { useColors } from '../../src/useColors';
+import { CATEGORIES, STATUS_FILTERS, type AssetStatus, type CategoryId } from '../../src/types';
 
-export default function TabOneScreen() {
+export default function HomeScreen() {
+  const insets = useSafeAreaInsets();
+  const c = useColors();
+  const { width } = useWindowDimensions();
+  const [category, setCategory] = useState<CategoryId>('all');
+  const [status, setStatus] = useState<AssetStatus | 'all'>('all');
+  const overview = useOverview();
+  const list = useFilteredAssets(category, status);
+  const gap = 10;
+  const pad = 16;
+  const cardW = (width - pad * 2 - gap) / 2;
+
+  const rows = useMemo(() => {
+    const r: (typeof list)[] = [];
+    for (let i = 0; i < list.length; i += 2) r.push(list.slice(i, i + 2));
+    return r;
+  }, [list]);
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tab One</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/index.tsx" />
+    <View collapsable={false} style={[styles.root, { backgroundColor: c.bg }]}>
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={{ paddingBottom: 24 }}
+        showsVerticalScrollIndicator={false}>
+        <LinearGradient
+          colors={[c.limeHeaderTop, c.limeHeader]}
+          style={[styles.header, { paddingTop: insets.top + 6 }]}>
+          <View style={styles.nav}>
+            <Text style={[styles.brand, { color: c.headerText }]}>有数</Text>
+            <View style={styles.navRight}>
+              <Pressable onPress={() => router.push('/search')} hitSlop={8} style={styles.iconBtn}>
+                <SymbolView name="magnifyingglass" size={22} tintColor={c.headerText} />
+              </Pressable>
+              <Pressable onPress={() => router.push('/calendar')} hitSlop={8} style={styles.iconBtn}>
+                <SymbolView name="calendar" size={22} tintColor={c.headerText} />
+              </Pressable>
+            </View>
+          </View>
+          <View style={{ paddingHorizontal: 4, paddingTop: 14, paddingBottom: 18 }}>
+            <OverviewCard
+              total={overview.total}
+              daily={overview.daily}
+              active={overview.active}
+              retired={overview.retired}
+              sold={overview.sold}
+            />
+          </View>
+        </LinearGradient>
+
+        <View style={[styles.sheet, { backgroundColor: c.bg }]}>
+          <FilterTabs
+            items={CATEGORIES}
+            selected={category}
+            onSelect={(id) => setCategory(id as CategoryId)}
+          />
+          <FilterTabs
+            items={STATUS_FILTERS}
+            selected={status}
+            onSelect={(id) => setStatus(id as AssetStatus | 'all')}
+          />
+
+          <View style={{ paddingHorizontal: pad, paddingTop: 8 }}>
+            {list.length === 0 ? (
+              <View style={styles.empty}>
+                <Text style={[styles.emptyTitle, { color: c.text }]}>还没有这类资产</Text>
+                <Text style={[styles.emptySub, { color: c.textSecondary }]}>点底部加号，把物品变成资产</Text>
+              </View>
+            ) : (
+              rows.map((row, i) => (
+                <View key={i} style={{ flexDirection: 'row', gap }}>
+                  {row.map((a) => (
+                    <View key={a.id} style={{ width: cardW }}>
+                      <AssetCard asset={a} onPress={() => router.push(`/asset/${a.id}`)} />
+                    </View>
+                  ))}
+                  {row.length === 1 ? <View style={{ width: cardW }} /> : null}
+                </View>
+              ))
+            )}
+          </View>
+        </View>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
-  },
+  root: { flex: 1 },
+  header: { paddingHorizontal: 20 },
+  nav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  brand: { fontSize: 28, fontWeight: '800', letterSpacing: 1 },
+  navRight: { flexDirection: 'row', gap: 4 },
+  iconBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  sheet: { minHeight: 0 },
+  empty: { paddingVertical: 48, alignItems: 'center' },
+  emptyTitle: { fontSize: 16, fontWeight: '700' },
+  emptySub: { marginTop: 6, fontSize: 13 },
 });
