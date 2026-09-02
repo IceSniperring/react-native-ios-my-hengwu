@@ -1,8 +1,8 @@
-import { Stack } from 'expo-router';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import { Platform, View } from 'react-native';
+import { useEffect, useMemo } from 'react';
+import { Appearance, Platform, View } from 'react-native';
 
 import { useStore } from '../src/store';
 import { useColors } from '../src/useColors';
@@ -30,6 +30,27 @@ export default function RootLayout() {
     if (hydrated) SplashScreen.hideAsync();
   }, [hydrated]);
 
+  // Keep native UI (Liquid Glass tab bar / status bar) in sync with app dark mode.
+  useEffect(() => {
+    Appearance.setColorScheme(scheme);
+  }, [scheme]);
+
+  const navTheme = useMemo(() => {
+    const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
+    return {
+      ...base,
+      colors: {
+        ...base.colors,
+        primary: c.tabSelected,
+        background: c.bg,
+        card: c.surface,
+        text: c.text,
+        border: c.line,
+        notification: c.danger,
+      },
+    };
+  }, [scheme, c]);
+
   if (!hydrated) return <View style={{ flex: 1, backgroundColor: c.limeHeader }} />;
 
   const nativeHeader = {
@@ -44,7 +65,7 @@ export default function RootLayout() {
   };
 
   return (
-    <>
+    <ThemeProvider value={navTheme}>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -72,6 +93,6 @@ export default function RootLayout() {
         <Stack.Screen name="savings" options={{ ...nativeHeader, title: '智能攒钱' }} />
         <Stack.Screen name="calendar" options={{ ...nativeHeader, title: '购入日历' }} />
       </Stack>
-    </>
+    </ThemeProvider>
   );
 }
