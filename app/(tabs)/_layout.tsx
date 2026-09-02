@@ -5,6 +5,8 @@ import { useColors } from '../../src/useColors';
 
 export default function TabLayout() {
   const c = useColors();
+  const screenBg = { backgroundColor: c.bg };
+
   return (
     <NativeTabs
       tintColor={c.tabSelected}
@@ -15,7 +17,7 @@ export default function TabLayout() {
         selected: { fontSize: 10, fontWeight: '700', color: c.tabSelected },
       }}
       iconColor={{ default: c.tabInactive, selected: c.tabSelected }}>
-      <NativeTabs.Trigger name="index">
+      <NativeTabs.Trigger name="index" contentStyle={screenBg}>
         <NativeTabs.Trigger.Label selectedStyle={{ color: c.tabSelected }}>资产</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           sf={{ default: 'shippingbox', selected: 'shippingbox.fill' }}
@@ -23,7 +25,7 @@ export default function TabLayout() {
           selectedColor={c.tabSelected}
         />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="insights">
+      <NativeTabs.Trigger name="insights" contentStyle={screenBg}>
         <NativeTabs.Trigger.Label selectedStyle={{ color: c.tabSelected }}>洞悉</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           sf={{ default: 'chart.pie', selected: 'chart.pie.fill' }}
@@ -34,6 +36,7 @@ export default function TabLayout() {
       <NativeTabs.Trigger
         name="add"
         disabled
+        contentStyle={screenBg}
         listeners={{
           tabPress: () => {
             router.push('/asset/form');
@@ -42,7 +45,7 @@ export default function TabLayout() {
         <NativeTabs.Trigger.Label hidden>添加</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="plus.circle.fill" md="add_circle" selectedColor={c.tabSelected} />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="wishlist">
+      <NativeTabs.Trigger name="wishlist" contentStyle={screenBg}>
         <NativeTabs.Trigger.Label selectedStyle={{ color: c.tabSelected }}>心愿</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           sf={{ default: 'heart', selected: 'heart.fill' }}
@@ -50,7 +53,7 @@ export default function TabLayout() {
           selectedColor={c.tabSelected}
         />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="profile">
+      <NativeTabs.Trigger name="profile" contentStyle={screenBg}>
         <NativeTabs.Trigger.Label selectedStyle={{ color: c.tabSelected }}>我的</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           sf={{ default: 'person', selected: 'person.fill' }}
