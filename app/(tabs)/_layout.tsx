@@ -1,27 +1,27 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { router } from 'expo-router';
-import { DynamicColorIOS, Platform } from 'react-native';
 
 import { useColors } from '../../src/useColors';
 import { useStore } from '../../src/store';
 
-const iosTabInactive = DynamicColorIOS({ light: '#8E8E93', dark: '#98989D' });
-const iosTabSelected = DynamicColorIOS({ light: '#007AFF', dark: '#0A84FF' });
-
+/**
+ * Avoid DynamicColorIOS on NativeTabs tint/iconColor — iOS 26 liquid glass +
+ * dynamic colors are buggy, and opaque objects in native tab props have also
+ * been linked to awkward prop freezes in Fabric DEV. Resolve colors from the
+ * app scheme instead (Appearance.setColorScheme already keeps UIKit in sync).
+ */
 export default function TabLayout() {
   const c = useColors();
   const scheme = useStore((s) => s.colorScheme);
   const screenBg = { backgroundColor: c.bg };
-  const selected = Platform.OS === 'ios' ? iosTabSelected : c.tabSelected;
-  const inactive = Platform.OS === 'ios' ? iosTabInactive : c.tabInactive;
+  const selected = c.tabSelected;
+  const inactive = c.tabInactive;
 
   return (
     <NativeTabs
-      // Force native chrome to match app scheme; Liquid Glass samples this.
       tintColor={selected}
       minimizeBehavior="never"
       disableTransparentOnScrollEdge
-      // Opaque enough on older iOS; iOS 26 still benefits from consistent icon colors.
       backgroundColor={scheme === 'dark' ? '#000000' : '#F2F2F7'}
       labelStyle={{
         default: { fontSize: 10, color: inactive },
@@ -61,17 +61,18 @@ export default function TabLayout() {
         />
       </NativeTabs.Trigger>
       {/*
-        role="search" asks iOS to place this item outside the main tab capsule
-        (trailing separate liquid-glass control), matching the split + button layout.
+        role="search" → trailing liquid-glass accessory.
+        Do not use `disabled` + mutate listeners; preventDefault keeps the add
+        route from focusing while still firing the press handler.
       */}
       <NativeTabs.Trigger
         name="add"
         role="search"
-        disabled
         contentStyle={screenBg}
         accessibilityLabel="添加物品"
         listeners={{
-          tabPress: () => {
+          tabPress: (e) => {
+            e.preventDefault();
             router.push('/asset/form');
           },
         }}>
