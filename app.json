@@ -47,8 +47,7 @@
           "cameraPermission": "用于拍照录入资产"
         }
       ],
-      "@react-native-community/datetimepicker",
-      "expo-glass-effect"
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true
