@@ -1,21 +1,13 @@
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import {
-  dailyCost,
-  formatMoney,
-  holdingDays,
-  remainingDays,
-  statusColor,
-  targetProgress,
-} from '../calc';
+import { dailyCost, formatMoney, holdingDays, statusColor } from '../calc';
 import { PRODUCT_IMAGES } from '../images';
 import { shadow } from '../theme';
 import type { Asset } from '../types';
 import { STATUS_LABEL } from '../types';
 import { useStore } from '../store';
 import { useColors } from '../useColors';
-import { CostBar } from './CostBar';
 
 type Props = {
   asset: Asset;
@@ -27,7 +19,6 @@ export function AssetCard({ asset, onPress, size }: Props) {
   const c = useColors();
   const scheme = useStore((s) => s.colorScheme);
   const days = holdingDays(asset);
-  const remain = remainingDays(asset);
   const source = asset.imageUri
     ? { uri: asset.imageUri }
     : asset.imageKey
@@ -74,14 +65,6 @@ export function AssetCard({ asset, onPress, size }: Props) {
         <Text style={[styles.daily, { color: c.text }]} numberOfLines={1}>
           {formatMoney(daily, 2)}/天
         </Text>
-        <View style={{ marginTop: 4 }}>
-          <CostBar
-            progress={targetProgress(asset)}
-            color={statusColor(asset.status)}
-            height={3}
-            label={asset.status === 'active' ? `剩${remain}天` : STATUS_LABEL[asset.status]}
-          />
-        </View>
       </View>
     </Pressable>
   );
@@ -122,5 +105,5 @@ const styles = StyleSheet.create({
   name: { marginTop: 10, fontSize: 15, fontWeight: '600' },
   meta: { marginTop: 4, fontSize: 12, fontWeight: '400' },
   footer: { flex: 1, justifyContent: 'flex-end' },
-  daily: { fontSize: 18, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  daily: { fontSize: 20, fontWeight: '700', fontVariant: ['tabular-nums'] },
 });
