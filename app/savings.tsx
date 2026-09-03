@@ -31,7 +31,7 @@ export default function SavingsScreen() {
               </View>
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
                 {[50, 200, 500].map((n) => (
-                  <Pressable key={n} onPress={() => contributePlan(p.id, n)} style={[styles.chip, { backgroundColor: c.limeSoft }]}>
+                  <Pressable key={n} onPress={() => contributePlan(p.id, n)} style={[styles.chip, { backgroundColor: c.chip }]}>
                     <Text style={styles.chipText}>+{n}</Text>
                   </Pressable>
                 ))}
@@ -44,7 +44,7 @@ export default function SavingsScreen() {
         <TextInput value={name} onChangeText={setName} placeholder="计划名称，例如换机基金" placeholderTextColor={c.textTertiary} style={[styles.input, { backgroundColor: c.input, color: c.text }]} />
         <TextInput value={target} onChangeText={setTarget} placeholder="目标金额" placeholderTextColor={c.textTertiary} keyboardType="decimal-pad" style={[styles.input, { backgroundColor: c.input, color: c.text }]} />
         <Pressable
-          style={[styles.cta, { backgroundColor: c.lime }]}
+          style={[styles.cta, { backgroundColor: c.tint }]}
           onPress={() => {
             const t = Number(target);
             if (!name.trim() || !t) return Alert.alert('填写名称和目标金额');
@@ -72,5 +72,5 @@ const styles = StyleSheet.create({
   section: { fontWeight: '800', marginTop: 12, marginBottom: 10 },
   input: { height: 48, borderRadius: 12, paddingHorizontal: 14, marginBottom: 10, fontSize: 16 },
   cta: { height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  ctaText: { fontWeight: '800' },
+  ctaText: { fontWeight: '800', color: '#FFFFFF' },
 });
