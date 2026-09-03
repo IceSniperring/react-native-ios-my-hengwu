@@ -1,11 +1,8 @@
 import { router } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import Animated, {
-  FadeIn,
-  FadeOut,
-  LinearTransition,
-} from 'react-native-reanimated';
+import PagerView, { type PagerViewOnPageScrollEvent } from 'react-native-pager-view';
+import { useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AssetCard } from '../../src/components/AssetCard';
@@ -38,6 +35,8 @@ export default function HomeScreen() {
     0,
     STATUS_FILTERS.findIndex((s) => s.id === status),
   );
+  const pageOffset = useSharedValue(0);
+  const pagerRef = useRef<PagerView>(null);
 
   const visibleCategories = useMemo(() => {
     return CATEGORIES.filter(
@@ -48,15 +47,31 @@ export default function HomeScreen() {
   useEffect(() => {
     if (!visibleCategories.some((cat) => cat.id === category)) {
       setCategory('all');
+      pagerRef.current?.setPage(0);
+      pageOffset.value = 0;
     }
-  }, [visibleCategories, category]);
+  }, [visibleCategories, category, pageOffset]);
 
-  const list = useFilteredAssets(category, status);
-  const rows = useMemo(() => {
-    const r: (typeof list)[] = [];
-    for (let i = 0; i < list.length; i += 2) r.push(list.slice(i, i + 2));
-    return r;
-  }, [list]);
+  const categoryIndex = Math.max(
+    0,
+    visibleCategories.findIndex((cat) => cat.id === category),
+  );
+
+  const selectCategory = (id: CategoryId) => {
+    setCategory(id);
+    const idx = visibleCategories.findIndex((cat) => cat.id === id);
+    if (idx >= 0) pagerRef.current?.setPage(idx);
+  };
+
+  const onPageScroll = (e: PagerViewOnPageScrollEvent) => {
+    const { position, offset } = e.nativeEvent;
+    pageOffset.value = position + offset;
+  };
+
+  const onPageSelected = (e: { nativeEvent: { position: number } }) => {
+    const id = visibleCategories[e.nativeEvent.position]?.id;
+    if (id && id !== category) setCategory(id);
+  };
 
   return (
     <View collapsable={false} style={[styles.root, { backgroundColor: c.bg }]}>
@@ -78,70 +93,140 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <ScrollView
-        stickyHeaderIndices={[1]}
-        contentContainerStyle={{
-          paddingBottom: Math.max(24, insets.bottom + 72),
-        }}
-        showsVerticalScrollIndicator={false}>
-        <View style={{ paddingHorizontal: pad, paddingTop: 4 }}>
-          <Text style={[styles.brand, { color: c.text }]}>有数</Text>
-          <View style={{ paddingTop: 12 }}>
-            <OverviewCard
-              total={overview.total}
-              daily={overview.daily}
-              active={overview.active}
-              retired={overview.retired}
-              sold={overview.sold}
+      <PagerView
+        ref={pagerRef}
+        style={styles.pager}
+        initialPage={categoryIndex}
+        onPageScroll={onPageScroll}
+        onPageSelected={onPageSelected}
+        offscreenPageLimit={1}>
+        {visibleCategories.map((cat) => (
+          <View key={cat.id} collapsable={false} style={{ flex: 1 }}>
+            <CategoryPage
+              category={cat.id}
+              status={status}
+              statusIndex={statusIndex}
+              onStatusChange={(i) => setStatus(STATUS_FILTERS[i]?.id ?? 'all')}
+              cardW={cardW}
+              gap={gap}
+              pad={pad}
+              overview={overview}
+              visibleCategories={visibleCategories}
+              selectedCategory={category}
+              onSelectCategory={selectCategory}
+              pageOffset={pageOffset}
             />
           </View>
-          <View style={{ height: 14 }} />
-        </View>
-
-        <View style={[styles.stickyBlock, { backgroundColor: c.bg }]}>
-          <FilterTabs
-            items={visibleCategories}
-            selected={category}
-            onSelect={(id) => setCategory(id as CategoryId)}
-          />
-          <NativeSegmented
-            values={STATUS_FILTERS.map((s) => s.label)}
-            selectedIndex={statusIndex}
-            onChange={(i) => setStatus(STATUS_FILTERS[i]?.id ?? 'all')}
-          />
-        </View>
-
-        <Animated.View
-          key={`${category}-${status}`}
-          entering={FadeIn.duration(160)}
-          exiting={FadeOut.duration(100)}
-          layout={LinearTransition.springify().damping(22).stiffness(280)}
-          style={{ paddingHorizontal: pad, paddingTop: 10 }}>
-          {list.length === 0 ? (
-            <View style={styles.empty}>
-              <Text style={[styles.emptyTitle, { color: c.text }]}>还没有这类资产</Text>
-              <Text style={[styles.emptySub, { color: c.textSecondary }]}>
-                点底部加号，把物品变成资产
-              </Text>
-            </View>
-          ) : (
-            rows.map((row, i) => (
-              <View key={i} style={{ flexDirection: 'row', gap, marginBottom: gap }}>
-                {row.map((a) => (
-                  <AssetCard
-                    key={a.id}
-                    asset={a}
-                    size={cardW}
-                    onPress={() => router.push(`/asset/${a.id}`)}
-                  />
-                ))}
-                {row.length === 1 ? <View style={{ width: cardW }} /> : null}
-              </View>
-            ))
-          )}
-        </Animated.View>
-      </ScrollView>
+        ))}
+      </PagerView>
     </View>
+  );
+}
+
+type Overview = {
+  total: number;
+  daily: number;
+  active: number;
+  retired: number;
+  sold: number;
+};
+
+function CategoryPage({
+  category,
+  status,
+  statusIndex,
+  onStatusChange,
+  cardW,
+  gap,
+  pad,
+  overview,
+  visibleCategories,
+  selectedCategory,
+  onSelectCategory,
+  pageOffset,
+}: {
+  category: CategoryId;
+  status: AssetStatus | 'all';
+  statusIndex: number;
+  onStatusChange: (i: number) => void;
+  cardW: number;
+  gap: number;
+  pad: number;
+  overview: Overview;
+  visibleCategories: { id: CategoryId; label: string }[];
+  selectedCategory: CategoryId;
+  onSelectCategory: (id: CategoryId) => void;
+  pageOffset: ReturnType<typeof useSharedValue<number>>;
+}) {
+  const c = useColors();
+  const insets = useSafeAreaInsets();
+  const list = useFilteredAssets(category, status);
+  const rows = useMemo(() => {
+    const r: (typeof list)[] = [];
+    for (let i = 0; i < list.length; i += 2) r.push(list.slice(i, i + 2));
+    return r;
+  }, [list]);
+
+  return (
+    <ScrollView
+      stickyHeaderIndices={[1]}
+      contentContainerStyle={{
+        paddingBottom: Math.max(24, insets.bottom + 72),
+      }}
+      showsVerticalScrollIndicator={false}>
+      <View style={{ paddingHorizontal: pad, paddingTop: 4 }}>
+        <Text style={[styles.brand, { color: c.text }]}>有数</Text>
+        <View style={{ paddingTop: 12 }}>
+          <OverviewCard
+            total={overview.total}
+            daily={overview.daily}
+            active={overview.active}
+            retired={overview.retired}
+            sold={overview.sold}
+          />
+        </View>
+        <View style={{ height: 14 }} />
+      </View>
+
+      <View style={[styles.stickyBlock, { backgroundColor: c.bg }]}>
+        <FilterTabs
+          items={visibleCategories}
+          selected={selectedCategory}
+          onSelect={(id) => onSelectCategory(id as CategoryId)}
+          pageOffset={pageOffset}
+        />
+        <NativeSegmented
+          values={STATUS_FILTERS.map((s) => s.label)}
+          selectedIndex={statusIndex}
+          onChange={onStatusChange}
+        />
+      </View>
+
+      <View style={{ paddingHorizontal: pad, paddingTop: 10 }}>
+        {list.length === 0 ? (
+          <View style={styles.empty}>
+            <Text style={[styles.emptyTitle, { color: c.text }]}>还没有这类资产</Text>
+            <Text style={[styles.emptySub, { color: c.textSecondary }]}>
+              点底部加号，把物品变成资产
+            </Text>
+          </View>
+        ) : (
+          rows.map((row, i) => (
+            <View key={i} style={{ flexDirection: 'row', gap, marginBottom: gap }}>
+              {row.map((a) => (
+                <AssetCard
+                  key={a.id}
+                  asset={a}
+                  size={cardW}
+                  onPress={() => router.push(`/asset/${a.id}`)}
+                />
+              ))}
+              {row.length === 1 ? <View style={{ width: cardW }} /> : null}
+            </View>
+          ))
+        )}
+      </View>
+    </ScrollView>
   );
 }
 
@@ -176,6 +261,7 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
     zIndex: 10,
   },
+  pager: { flex: 1 },
   empty: { paddingVertical: 48, alignItems: 'center' },
   emptyTitle: { fontSize: 16, fontWeight: '700' },
   emptySub: { marginTop: 6, fontSize: 13 },
