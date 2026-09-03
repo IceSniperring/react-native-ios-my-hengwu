@@ -33,18 +33,6 @@ export default function TabLayout() {
           selectedColor={c.tabSelected}
         />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger
-        name="add"
-        disabled
-        contentStyle={screenBg}
-        listeners={{
-          tabPress: () => {
-            router.push('/asset/form');
-          },
-        }}>
-        <NativeTabs.Trigger.Label hidden>添加</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="plus.circle.fill" md="add_circle" selectedColor={c.tabSelected} />
-      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="wishlist" contentStyle={screenBg}>
         <NativeTabs.Trigger.Label selectedStyle={{ color: c.tabSelected }}>心愿</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
@@ -60,6 +48,24 @@ export default function TabLayout() {
           md="person"
           selectedColor={c.tabSelected}
         />
+      </NativeTabs.Trigger>
+      {/*
+        role="search" asks iOS to place this item outside the main tab capsule
+        (trailing separate liquid-glass control), matching the split + button layout.
+      */}
+      <NativeTabs.Trigger
+        name="add"
+        role="search"
+        disabled
+        contentStyle={screenBg}
+        accessibilityLabel="添加物品"
+        listeners={{
+          tabPress: () => {
+            router.push('/asset/form');
+          },
+        }}>
+        <NativeTabs.Trigger.Label hidden>添加</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="plus" md="add" selectedColor={c.tabSelected} />
       </NativeTabs.Trigger>
     </NativeTabs>
   );
