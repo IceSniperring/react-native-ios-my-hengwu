@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import PagerView, { type PagerViewOnPageScrollEvent } from 'react-native-pager-view';
+import { useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AssetCard } from '../../src/components/AssetCard';
@@ -18,7 +19,6 @@ import {
   type AssetStatus,
   type CategoryId,
 } from '../../src/types';
-import { useSharedValue } from 'react-native-reanimated';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -37,7 +37,6 @@ export default function HomeScreen() {
   );
   const pageOffset = useSharedValue(0);
   const pagerRef = useRef<PagerView>(null);
-  const syncingFromTab = useRef(false);
 
   const visibleCategories = useMemo(() => {
     return CATEGORIES.filter(
@@ -48,7 +47,6 @@ export default function HomeScreen() {
   useEffect(() => {
     if (!visibleCategories.some((cat) => cat.id === category)) {
       setCategory('all');
-      syncingFromTab.current = true;
       pagerRef.current?.setPage(0);
       pageOffset.value = 0;
     }
@@ -63,7 +61,6 @@ export default function HomeScreen() {
     setCategory(id);
     const idx = visibleCategories.findIndex((cat) => cat.id === id);
     if (idx >= 0) {
-      syncingFromTab.current = true;
       pagerRef.current?.setPage(idx);
     }
   };
@@ -76,11 +73,11 @@ export default function HomeScreen() {
   const onPageSelected = (e: { nativeEvent: { position: number } }) => {
     const id = visibleCategories[e.nativeEvent.position]?.id;
     if (id && id !== category) setCategory(id);
-    syncingFromTab.current = false;
   };
 
   return (
     <View collapsable={false} style={[styles.root, { backgroundColor: c.bg }]}>
+      {/* Fixed chrome only — title + search/calendar */}
       <View style={[styles.topChrome, { paddingTop: insets.top, backgroundColor: c.bg }]}>
         <View style={styles.topRow}>
           <Text style={[styles.compactTitle, { color: c.text }]}>有数</Text>
@@ -99,33 +96,6 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <View style={styles.header}>
-        <Text style={[styles.brand, { color: c.text }]}>有数</Text>
-        <View style={{ paddingTop: 12 }}>
-          <OverviewCard
-            total={overview.total}
-            daily={overview.daily}
-            active={overview.active}
-            retired={overview.retired}
-            sold={overview.sold}
-          />
-        </View>
-      </View>
-
-      <View style={[styles.tabsBlock, { backgroundColor: c.bg }]}>
-        <FilterTabs
-          items={visibleCategories}
-          selected={category}
-          onSelect={(id) => selectCategory(id as CategoryId)}
-          pageOffset={pageOffset}
-        />
-        <NativeSegmented
-          values={STATUS_FILTERS.map((s) => s.label)}
-          selectedIndex={statusIndex}
-          onChange={(i) => setStatus(STATUS_FILTERS[i]?.id ?? 'all')}
-        />
-      </View>
-
       <PagerView
         ref={pagerRef}
         style={styles.pager}
@@ -133,8 +103,21 @@ export default function HomeScreen() {
         onPageScroll={onPageScroll}
         onPageSelected={onPageSelected}>
         {visibleCategories.map((cat) => (
-          <View key={cat.id} style={{ flex: 1 }}>
-            <CategoryPage category={cat.id} status={status} cardW={cardW} gap={gap} pad={pad} />
+          <View key={cat.id} collapsable={false} style={{ flex: 1 }}>
+            <CategoryPage
+              category={cat.id}
+              status={status}
+              statusIndex={statusIndex}
+              onStatusChange={(i) => setStatus(STATUS_FILTERS[i]?.id ?? 'all')}
+              cardW={cardW}
+              gap={gap}
+              pad={pad}
+              overview={overview}
+              visibleCategories={visibleCategories}
+              selectedCategory={category}
+              onSelectCategory={selectCategory}
+              pageOffset={pageOffset}
+            />
           </View>
         ))}
       </PagerView>
@@ -142,18 +125,40 @@ export default function HomeScreen() {
   );
 }
 
+type Overview = {
+  total: number;
+  daily: number;
+  active: number;
+  retired: number;
+  sold: number;
+};
+
 function CategoryPage({
   category,
   status,
+  statusIndex,
+  onStatusChange,
   cardW,
   gap,
   pad,
+  overview,
+  visibleCategories,
+  selectedCategory,
+  onSelectCategory,
+  pageOffset,
 }: {
   category: CategoryId;
   status: AssetStatus | 'all';
+  statusIndex: number;
+  onStatusChange: (i: number) => void;
   cardW: number;
   gap: number;
   pad: number;
+  overview: Overview;
+  visibleCategories: { id: CategoryId; label: string }[];
+  selectedCategory: CategoryId;
+  onSelectCategory: (id: CategoryId) => void;
+  pageOffset: ReturnType<typeof useSharedValue<number>>;
 }) {
   const c = useColors();
   const insets = useSafeAreaInsets();
@@ -166,32 +171,67 @@ function CategoryPage({
 
   return (
     <ScrollView
+      stickyHeaderIndices={[1]}
       contentContainerStyle={{
-        paddingHorizontal: pad,
-        paddingTop: 10,
         paddingBottom: Math.max(24, insets.bottom + 72),
       }}
       showsVerticalScrollIndicator={false}>
-      {list.length === 0 ? (
-        <View style={styles.empty}>
-          <Text style={[styles.emptyTitle, { color: c.text }]}>还没有这类资产</Text>
-          <Text style={[styles.emptySub, { color: c.textSecondary }]}>点底部加号，把物品变成资产</Text>
+      {/* [0] scrolls away with list */}
+      <View style={{ paddingHorizontal: pad, paddingTop: 4 }}>
+        <Text style={[styles.brand, { color: c.text }]}>有数</Text>
+        <View style={{ paddingTop: 12 }}>
+          <OverviewCard
+            total={overview.total}
+            daily={overview.daily}
+            active={overview.active}
+            retired={overview.retired}
+            sold={overview.sold}
+          />
         </View>
-      ) : (
-        rows.map((row, i) => (
-          <View key={i} style={{ flexDirection: 'row', gap, marginBottom: gap }}>
-            {row.map((a) => (
-              <AssetCard
-                key={a.id}
-                asset={a}
-                size={cardW}
-                onPress={() => router.push(`/asset/${a.id}`)}
-              />
-            ))}
-            {row.length === 1 ? <View style={{ width: cardW }} /> : null}
+        {/* 12–16 gap between overview and category tabs */}
+        <View style={{ height: 14 }} />
+      </View>
+
+      {/* [1] sticky under fixed chrome */}
+      <View style={[styles.stickyBlock, { backgroundColor: c.bg }]}>
+        <FilterTabs
+          items={visibleCategories}
+          selected={selectedCategory}
+          onSelect={(id) => onSelectCategory(id as CategoryId)}
+          pageOffset={pageOffset}
+        />
+        <NativeSegmented
+          values={STATUS_FILTERS.map((s) => s.label)}
+          selectedIndex={statusIndex}
+          onChange={onStatusChange}
+        />
+      </View>
+
+      {/* [2] grid */}
+      <View style={{ paddingHorizontal: pad, paddingTop: 10 }}>
+        {list.length === 0 ? (
+          <View style={styles.empty}>
+            <Text style={[styles.emptyTitle, { color: c.text }]}>还没有这类资产</Text>
+            <Text style={[styles.emptySub, { color: c.textSecondary }]}>
+              点底部加号，把物品变成资产
+            </Text>
           </View>
-        ))
-      )}
+        ) : (
+          rows.map((row, i) => (
+            <View key={i} style={{ flexDirection: 'row', gap, marginBottom: gap }}>
+              {row.map((a) => (
+                <AssetCard
+                  key={a.id}
+                  asset={a}
+                  size={cardW}
+                  onPress={() => router.push(`/asset/${a.id}`)}
+                />
+              ))}
+              {row.length === 1 ? <View style={{ width: cardW }} /> : null}
+            </View>
+          ))
+        )}
+      </View>
     </ScrollView>
   );
 }
@@ -222,10 +262,10 @@ const styles = StyleSheet.create({
     gap: 8,
     zIndex: 1,
   },
-  header: { paddingHorizontal: 16, paddingTop: 4 },
   brand: { fontSize: 34, fontWeight: '800', letterSpacing: 0.5 },
-  tabsBlock: {
+  stickyBlock: {
     paddingBottom: 4,
+    zIndex: 10,
   },
   pager: { flex: 1 },
   empty: { paddingVertical: 48, alignItems: 'center' },
