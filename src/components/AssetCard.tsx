@@ -14,6 +14,7 @@ import { PRODUCT_IMAGES } from '../images';
 import { radius, shadow } from '../theme';
 import type { Asset } from '../types';
 import { STATUS_LABEL } from '../types';
+import { useStore } from '../store';
 import { useColors } from '../useColors';
 import { CostBar } from './CostBar';
 
@@ -24,6 +25,7 @@ type Props = {
 
 export function AssetCard({ asset, onPress }: Props) {
   const c = useColors();
+  const scheme = useStore((s) => s.colorScheme);
   const days = holdingDays(asset);
   const remain = remainingDays(asset);
   const source = asset.imageUri
@@ -37,7 +39,7 @@ export function AssetCard({ asset, onPress }: Props) {
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
-        shadow.card,
+        scheme === 'light' && shadow.card,
         { backgroundColor: c.card },
         pressed && { opacity: 0.88, transform: [{ scale: 0.985 }] },
       ]}>
@@ -65,6 +67,7 @@ export function AssetCard({ asset, onPress }: Props) {
           <CostBar
             progress={targetProgress(asset)}
             color={statusColor(asset.status)}
+            height={4}
             label={asset.status === 'active' ? `还剩 ${remain} 天` : STATUS_LABEL[asset.status]}
           />
         </View>
@@ -76,7 +79,7 @@ export function AssetCard({ asset, onPress }: Props) {
 const styles = StyleSheet.create({
   card: {
     flex: 1,
-    borderRadius: radius.lg,
+    borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 12,
   },

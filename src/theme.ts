@@ -71,8 +71,8 @@ export const colors = palettes.light;
 export const radius = {
   sm: 10,
   md: 14,
-  lg: 20,
-  xl: 24,
+  lg: 16,
+  xl: 16,
   pill: 999,
 };
 
