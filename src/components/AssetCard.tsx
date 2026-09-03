@@ -14,6 +14,7 @@ import { PRODUCT_IMAGES } from '../images';
 import { radius, shadow } from '../theme';
 import type { Asset } from '../types';
 import { STATUS_LABEL } from '../types';
+import { useStore } from '../store';
 import { useColors } from '../useColors';
 import { CostBar } from './CostBar';
 
@@ -24,6 +25,7 @@ type Props = {
 
 export function AssetCard({ asset, onPress }: Props) {
   const c = useColors();
+  const scheme = useStore((s) => s.colorScheme);
   const days = holdingDays(asset);
   const remain = remainingDays(asset);
   const source = asset.imageUri
@@ -37,7 +39,7 @@ export function AssetCard({ asset, onPress }: Props) {
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
-        shadow.card,
+        scheme === 'light' && shadow.card,
         { backgroundColor: c.card },
         pressed && { opacity: 0.88, transform: [{ scale: 0.985 }] },
       ]}>
@@ -65,6 +67,7 @@ export function AssetCard({ asset, onPress }: Props) {
           <CostBar
             progress={targetProgress(asset)}
             color={statusColor(asset.status)}
+            height={4}
             label={asset.status === 'active' ? `还剩 ${remain} 天` : STATUS_LABEL[asset.status]}
           />
         </View>
@@ -80,7 +83,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 12,
   },
-  imageBox: { height: 118 },
+  imageBox: { height: 110 },
   image: { width: '100%', height: '100%' },
   badge: {
     position: 'absolute',
@@ -98,5 +101,5 @@ const styles = StyleSheet.create({
   body: { paddingHorizontal: 12, paddingTop: 10, paddingBottom: 12 },
   name: { fontSize: 14, fontWeight: '700' },
   meta: { marginTop: 4, fontSize: 11 },
-  daily: { marginTop: 6, fontSize: 18, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  daily: { marginTop: 6, fontSize: 17, fontWeight: '800', fontVariant: ['tabular-nums'] },
 });

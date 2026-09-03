@@ -52,14 +52,14 @@ export default function HomeScreen() {
               <Pressable
                 onPress={() => router.push('/search')}
                 hitSlop={8}
-                style={[styles.iconBtn, { backgroundColor: c.chip }]}>
+                style={[styles.iconBtn, { backgroundColor: c.fill }]}>
                 <SymbolView name="magnifyingglass" size={18} tintColor={c.tint} />
               </Pressable>
               <Pressable
                 onPress={() => router.push('/calendar')}
                 hitSlop={8}
-                style={[styles.iconBtn, { backgroundColor: c.chip }]}>
-                <SymbolView name="square.grid.2x2" size={18} tintColor={c.tint} />
+                style={[styles.iconBtn, { backgroundColor: c.fill }]}>
+                <SymbolView name="calendar" size={18} tintColor={c.tint} />
               </Pressable>
             </View>
           </View>
@@ -113,7 +113,7 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  header: { paddingHorizontal: 16 },
+  header: { paddingHorizontal: 20 },
   nav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   brand: { fontSize: 34, fontWeight: '800', letterSpacing: 0.5 },
   navRight: { flexDirection: 'row', gap: 8 },
