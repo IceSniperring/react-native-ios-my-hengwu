@@ -51,14 +51,14 @@ export function DailyCostChart({
             x2={width - pad.r}
             y1={y(target)}
             y2={y(target)}
-            stroke={colors.limeDark}
+            stroke={colors.tint}
             strokeDasharray="4 4"
             strokeWidth={1.5}
           />
         ) : null}
-        <Path d={area} fill="rgba(200,240,77,0.22)" />
-        <Path d={d} fill="none" stroke={colors.limeDark} strokeWidth={2.5} />
-        <Circle cx={x(data.length - 1)} cy={y(last.value)} r={4.5} fill={colors.limeDark} />
+        <Path d={area} fill="rgba(0,122,255,0.18)" />
+        <Path d={d} fill="none" stroke={colors.tint} strokeWidth={2.5} />
+        <Circle cx={x(data.length - 1)} cy={y(last.value)} r={4.5} fill={colors.tint} />
       </Svg>
     </View>
   );
@@ -77,9 +77,9 @@ export function StackedStatusColumn({
 }) {
   const total = active + idle + sold || 1;
   const segs = [
-    { v: sold, c: colors.orange },
-    { v: idle, c: colors.teal },
-    { v: active, c: colors.lime },
+    { v: sold, c: colors.statusSold },
+    { v: idle, c: colors.statusRetired },
+    { v: active, c: colors.statusActive },
   ];
   return (
     <View style={{ width: 36, height, justifyContent: 'flex-end' }}>
@@ -186,7 +186,7 @@ export function SegmentedBar({
   );
 }
 
-export function MiniBars({ values, color = colors.lime, height = 56 }: { values: number[]; color?: string; height?: number }) {
+export function MiniBars({ values, color = colors.tint, height = 56 }: { values: number[]; color?: string; height?: number }) {
   const max = Math.max(...values, 1);
   return (
     <Svg width="100%" height={height} viewBox={`0 0 ${values.length * 10} ${height}`} preserveAspectRatio="none">

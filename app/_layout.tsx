@@ -51,7 +51,7 @@ export default function RootLayout() {
     };
   }, [scheme, c]);
 
-  if (!hydrated) return <View style={{ flex: 1, backgroundColor: scheme === 'dark' ? c.bg : c.limeHeader }} />;
+  if (!hydrated) return <View style={{ flex: 1, backgroundColor: c.bg }} />;
 
   const nativeHeader = {
     headerShown: true,

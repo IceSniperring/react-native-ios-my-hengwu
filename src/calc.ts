@@ -76,7 +76,7 @@ export function formatMoney(n: number, digits = 2) {
 
 export function formatDaily(n: number) {
   const digits = Math.abs(n) >= 10 ? 2 : 1;
-  return `${formatMoney(n, digits)}/天`;
+  return `${formatMoney(n, digits)} /天`;
 }
 
 export function formatCompact(n: number) {
@@ -117,7 +117,7 @@ export function dailyCostHistory(asset: Asset, points = 12) {
 }
 
 export function statusColor(status: AssetStatus) {
-  if (status === 'active') return '#C8F04D';
-  if (status === 'retired') return '#F5C400';
-  return '#FF8A3A';
+  if (status === 'active') return '#34C759';
+  if (status === 'retired') return '#FF9500';
+  return '#8E8E93';
 }

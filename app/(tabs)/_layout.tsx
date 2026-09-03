@@ -6,7 +6,7 @@ import { useColors } from '../../src/useColors';
 import { useStore } from '../../src/store';
 
 const iosTabInactive = DynamicColorIOS({ light: '#8E8E93', dark: '#98989D' });
-const iosTabSelected = DynamicColorIOS({ light: '#C8F04D', dark: '#C8F04D' });
+const iosTabSelected = DynamicColorIOS({ light: '#007AFF', dark: '#0A84FF' });
 
 export default function TabLayout() {
   const c = useColors();
@@ -22,7 +22,7 @@ export default function TabLayout() {
       minimizeBehavior="never"
       disableTransparentOnScrollEdge
       // Opaque enough on older iOS; iOS 26 still benefits from consistent icon colors.
-      backgroundColor={scheme === 'dark' ? '#0E0E0E' : '#FFFFFF'}
+      backgroundColor={scheme === 'dark' ? '#000000' : '#F2F2F7'}
       labelStyle={{
         default: { fontSize: 10, color: inactive },
         selected: { fontSize: 10, fontWeight: '700', color: selected },

@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { formatMoney } from '../calc';
+import { radius, shadow } from '../theme';
 import { useColors } from '../useColors';
 
 type Props = {
@@ -15,27 +16,45 @@ export function OverviewCard({ total, daily, active, retired, sold }: Props) {
   const c = useColors();
   const sum = active + retired + sold || 1;
   return (
-    <View>
+    <View style={[styles.card, shadow.card, { backgroundColor: c.card }]}>
       <View style={styles.topRow}>
-        <Text style={[styles.kicker, { color: c.headerText, opacity: 0.7 }]}>资产总览</Text>
-        <Text style={[styles.count, { color: c.headerText, opacity: 0.45 }]}>
+        <Text style={[styles.kicker, { color: c.textSecondary }]}>资产总览</Text>
+        <Text style={[styles.count, { color: c.textTertiary }]}>
           {active}/{active + retired + sold}
         </Text>
       </View>
       <View style={styles.metrics}>
         <View style={{ flex: 1 }}>
-          <Text style={[styles.label, { color: c.headerText, opacity: 0.65 }]}>总资产</Text>
-          <Text style={[styles.value, { color: c.headerText }]}>{formatMoney(total)}</Text>
+          <Text style={[styles.label, { color: c.textSecondary }]}>总资产</Text>
+          <Text style={[styles.value, { color: c.text }]}>{formatMoney(total)}</Text>
         </View>
         <View style={{ flex: 1, alignItems: 'flex-end' }}>
-          <Text style={[styles.label, { color: c.headerText, opacity: 0.65 }]}>日均成本</Text>
-          <Text style={[styles.value, { color: c.headerText }]}>{formatMoney(daily)}</Text>
+          <Text style={[styles.label, { color: c.textSecondary }]}>日均成本</Text>
+          <Text style={[styles.value, { color: c.text }]}>{formatMoney(daily)}</Text>
         </View>
       </View>
       <View style={styles.bars}>
-        <Bar label={`服役中 ${active}`} color={c.limeDeep} track={c.limeTrack} text={c.headerText} ratio={active / sum} />
-        <Bar label={`已退役 ${retired}`} color={c.yellow} track={c.limeTrack} text={c.headerText} ratio={retired / sum} />
-        <Bar label={`已卖出 ${sold}`} color={c.orange} track={c.limeTrack} text={c.headerText} ratio={sold / sum} />
+        <Bar
+          label={`服役中 ${active}`}
+          color={c.statusActive}
+          track={c.track}
+          text={c.textSecondary}
+          ratio={active / sum}
+        />
+        <Bar
+          label={`已退役 ${retired}`}
+          color={c.statusRetired}
+          track={c.track}
+          text={c.textSecondary}
+          ratio={retired / sum}
+        />
+        <Bar
+          label={`已卖出 ${sold}`}
+          color={c.statusSold}
+          track={c.track}
+          text={c.textSecondary}
+          ratio={sold / sum}
+        />
       </View>
     </View>
   );
@@ -65,6 +84,12 @@ function Bar({
 }
 
 const styles = StyleSheet.create({
+  card: {
+    borderRadius: radius.xl,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 16,
+  },
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   kicker: { fontSize: 13 },
   count: { fontSize: 13 },

@@ -54,8 +54,8 @@ export default function WishlistScreen() {
     <View style={[styles.root, { paddingTop: insets.top, backgroundColor: c.bg }]}>
       <View style={styles.head}>
         <Text style={[styles.title, { color: c.text }]}>心愿清单</Text>
-        <Pressable onPress={() => setOpen(true)} style={[styles.add, { backgroundColor: c.lime }]}>
-          <SymbolView name="plus" size={18} tintColor="#111" />
+        <Pressable onPress={() => setOpen(true)} style={[styles.add, { backgroundColor: c.tint }]}>
+          <SymbolView name="plus" size={18} tintColor="#FFFFFF" />
         </Pressable>
       </View>
       <Text style={[styles.sub, { color: c.textSecondary }]}>先攒够再买，买得贵也要心中有数</Text>
@@ -84,10 +84,10 @@ export default function WishlistScreen() {
                           })
                         : updateWish(w.id, { saved: w.saved + 200 });
                     }}>
-                    <Text style={styles.miniText}>+攒钱</Text>
+                    <Text style={[styles.miniText, { color: c.text }]}>+攒钱</Text>
                   </Pressable>
                   <Pressable
-                    style={[styles.mini, { backgroundColor: c.lime }]}
+                    style={[styles.mini, { backgroundColor: c.tint }]}
                     onPress={() => {
                       const id = addAsset({
                         name: w.name,
@@ -103,7 +103,7 @@ export default function WishlistScreen() {
                       removeWish(w.id);
                       router.push(`/asset/${id}`);
                     }}>
-                    <Text style={styles.miniText}>买下入库</Text>
+                    <Text style={[styles.miniText, { color: '#FFFFFF' }]}>买下入库</Text>
                   </Pressable>
                   <Pressable onPress={() => removeWish(w.id)}>
                     <SymbolView name="trash" size={18} tintColor={c.textSecondary} />
@@ -122,7 +122,7 @@ export default function WishlistScreen() {
             <Text style={[styles.sheetTitle, { color: c.text }]}>新心愿</Text>
             <TextInput value={name} onChangeText={setName} placeholder="想买什么" placeholderTextColor={c.textTertiary} style={[styles.input, { backgroundColor: c.input, color: c.text }]} />
             <TextInput value={price} onChangeText={setPrice} placeholder="目标价格" placeholderTextColor={c.textTertiary} keyboardType="decimal-pad" style={[styles.input, { backgroundColor: c.input, color: c.text }]} />
-            <Pressable onPress={create} style={[styles.cta, { backgroundColor: c.lime }]}>
+            <Pressable onPress={create} style={[styles.cta, { backgroundColor: c.tint }]}>
               <Text style={styles.ctaText}>加入清单</Text>
             </Pressable>
             <Pressable onPress={() => setOpen(false)} style={{ alignItems: 'center', padding: 10 }}>
@@ -160,5 +160,5 @@ const styles = StyleSheet.create({
   sheetTitle: { fontSize: 18, fontWeight: '800', marginBottom: 12 },
   input: { height: 48, borderRadius: 12, paddingHorizontal: 14, marginBottom: 10, fontSize: 16 },
   cta: { height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  ctaText: { fontWeight: '800' },
+  ctaText: { fontWeight: '800', color: '#FFFFFF' },
 });

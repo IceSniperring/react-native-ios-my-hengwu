@@ -1,4 +1,3 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useMemo, useState } from 'react';
@@ -41,27 +40,30 @@ export default function HomeScreen() {
         contentInsetAdjustmentBehavior="never"
         style={{ backgroundColor: c.bg }}
         contentContainerStyle={{
-          // Enough clearance for the floating Liquid Glass tab bar, without a huge empty tail.
           paddingBottom: Math.max(24, insets.bottom + 72),
           flexGrow: 1,
         }}
         showsVerticalScrollIndicator={false}
         bounces>
-        <LinearGradient
-          colors={[c.limeHeaderTop, c.limeHeader]}
-          style={[styles.header, { paddingTop: insets.top }]}>
+        <View style={[styles.header, { paddingTop: insets.top }]}>
           <View style={styles.nav}>
-            <Text style={[styles.brand, { color: c.headerText }]}>有数</Text>
+            <Text style={[styles.brand, { color: c.text }]}>有数</Text>
             <View style={styles.navRight}>
-              <Pressable onPress={() => router.push('/search')} hitSlop={8} style={styles.iconBtn}>
-                <SymbolView name="magnifyingglass" size={22} tintColor={c.headerText} />
+              <Pressable
+                onPress={() => router.push('/search')}
+                hitSlop={8}
+                style={[styles.iconBtn, { backgroundColor: c.chip }]}>
+                <SymbolView name="magnifyingglass" size={18} tintColor={c.tint} />
               </Pressable>
-              <Pressable onPress={() => router.push('/calendar')} hitSlop={8} style={styles.iconBtn}>
-                <SymbolView name="calendar" size={22} tintColor={c.headerText} />
+              <Pressable
+                onPress={() => router.push('/calendar')}
+                hitSlop={8}
+                style={[styles.iconBtn, { backgroundColor: c.chip }]}>
+                <SymbolView name="square.grid.2x2" size={18} tintColor={c.tint} />
               </Pressable>
             </View>
           </View>
-          <View style={{ paddingHorizontal: 4, paddingTop: 8, paddingBottom: 14 }}>
+          <View style={{ paddingTop: 12 }}>
             <OverviewCard
               total={overview.total}
               daily={overview.daily}
@@ -70,7 +72,7 @@ export default function HomeScreen() {
               sold={overview.sold}
             />
           </View>
-        </LinearGradient>
+        </View>
 
         <View style={[styles.sheet, { backgroundColor: c.bg }]}>
           <FilterTabs
@@ -111,12 +113,18 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  header: { paddingHorizontal: 20 },
+  header: { paddingHorizontal: 16 },
   nav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  brand: { fontSize: 26, fontWeight: '800', letterSpacing: 1 },
-  navRight: { flexDirection: 'row', gap: 4 },
-  iconBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  sheet: { minHeight: 0 },
+  brand: { fontSize: 34, fontWeight: '800', letterSpacing: 0.5 },
+  navRight: { flexDirection: 'row', gap: 8 },
+  iconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sheet: { minHeight: 0, paddingTop: 8 },
   empty: { paddingVertical: 48, alignItems: 'center' },
   emptyTitle: { fontSize: 16, fontWeight: '700' },
   emptySub: { marginTop: 6, fontSize: 13 },
