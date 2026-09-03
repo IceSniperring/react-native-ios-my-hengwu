@@ -59,7 +59,7 @@ export default function HomeScreen() {
                 onPress={() => router.push('/calendar')}
                 hitSlop={8}
                 style={[styles.iconBtn, { backgroundColor: c.chip }]}>
-                <SymbolView name="square.grid.2x2" size={18} tintColor={c.tint} />
+                <SymbolView name="calendar" size={18} tintColor={c.tint} />
               </Pressable>
             </View>
           </View>

@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { formatMoney } from '../calc';
 import { radius, shadow } from '../theme';
+import { useStore } from '../store';
 import { useColors } from '../useColors';
 
 type Props = {
@@ -14,9 +15,10 @@ type Props = {
 
 export function OverviewCard({ total, daily, active, retired, sold }: Props) {
   const c = useColors();
+  const scheme = useStore((s) => s.colorScheme);
   const sum = active + retired + sold || 1;
   return (
-    <View style={[styles.card, shadow.card, { backgroundColor: c.card }]}>
+    <View style={[styles.card, scheme === 'light' && shadow.card, { backgroundColor: c.card }]}>
       <View style={styles.topRow}>
         <Text style={[styles.kicker, { color: c.textSecondary }]}>资产总览</Text>
         <Text style={[styles.count, { color: c.textTertiary }]}>
@@ -85,7 +87,7 @@ function Bar({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: radius.xl,
+    borderRadius: 16,
     paddingHorizontal: 16,
     paddingTop: 14,
     paddingBottom: 16,
@@ -95,9 +97,9 @@ const styles = StyleSheet.create({
   count: { fontSize: 13 },
   metrics: { flexDirection: 'row', marginTop: 10 },
   label: { fontSize: 12 },
-  value: { marginTop: 4, fontSize: 22, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  value: { marginTop: 4, fontSize: 26, fontWeight: '800', fontVariant: ['tabular-nums'] },
   bars: { flexDirection: 'row', gap: 12, marginTop: 16 },
   barLabel: { fontSize: 11, marginBottom: 6 },
-  barTrack: { height: 7, borderRadius: 7, overflow: 'hidden' },
-  barFill: { height: 7, borderRadius: 7 },
+  barTrack: { height: 4, borderRadius: 4, overflow: 'hidden' },
+  barFill: { height: 4, borderRadius: 4 },
 });
