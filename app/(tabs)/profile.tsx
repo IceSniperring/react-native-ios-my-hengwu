@@ -23,7 +23,7 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
+      contentInsetAdjustmentBehavior="never"
       style={{ flex: 1, backgroundColor: c.bg }}
       contentContainerStyle={[styles.root, { paddingTop: insets.top }]}>
       <Text style={[styles.title, { color: c.text }]}>我的</Text>

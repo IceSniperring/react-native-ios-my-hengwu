@@ -77,7 +77,7 @@ export default function InsightsScreen() {
         onSelect={(id) => setRange(id as (typeof RANGES)[number]['id'])}
       />
 
-      <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentInsetAdjustmentBehavior="never" contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <View style={[styles.card, { backgroundColor: c.card, borderColor: c.line }]}>
           <Text style={[styles.smart, { color: c.limeDark }]}>✦ 智能发现</Text>
           <InsightRow
