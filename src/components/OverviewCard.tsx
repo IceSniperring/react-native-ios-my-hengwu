@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
+import Svg, { Line } from 'react-native-svg';
 
 import { formatMoney } from '../calc';
 import { LIME } from '../theme';
@@ -14,7 +15,7 @@ type Props = {
   sold: number;
 };
 
-/** Stamp shell + reference hierarchy (title/pill, metrics, dashed rule, segmented bar). */
+/** Stamp shell + designer hierarchy: title/count, metrics, dashed rule, single segmented track. */
 export function OverviewCard({ total, daily, active, retired, sold }: Props) {
   const c = useColors();
   const scheme = useStore((s) => s.colorScheme);
@@ -22,9 +23,7 @@ export function OverviewCard({ total, daily, active, retired, sold }: Props) {
   const sum = totalCount || 1;
   const stroke = scheme === 'dark' ? 'rgba(255,255,255,0.55)' : '#1A1A1A';
   const paper = scheme === 'dark' ? '#1C1C1E' : '#FFFEF7';
-  const postmarkOpacity = scheme === 'dark' ? 0.7 : 0.85;
-  const dash = scheme === 'dark' ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.12)';
-  const pillBg = scheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)';
+  const dashColor = scheme === 'dark' ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.12)';
 
   return (
     <View style={[styles.card, { backgroundColor: paper, borderColor: stroke }]}>
@@ -33,14 +32,13 @@ export function OverviewCard({ total, daily, active, retired, sold }: Props) {
         <View style={styles.inner}>
           <View style={styles.topRow}>
             <Text style={[styles.kicker, { color: c.textSecondary }]}>资产总览</Text>
-            <View style={[styles.pill, { backgroundColor: pillBg }]}>
-              <Text style={[styles.pillText, { color: c.textTertiary }]}>
-                {active}/{totalCount}
-              </Text>
-            </View>
+            <Text style={[styles.count, { color: c.textTertiary }]}>
+              {active}/{totalCount}
+            </Text>
           </View>
 
-          <View pointerEvents="none" style={[styles.postmarkWrap, { opacity: postmarkOpacity }]}>
+          {/* Postmark stays quiet — opacity ≤ 0.45 */}
+          <View pointerEvents="none" style={[styles.postmarkWrap, { opacity: 0.45 }]}>
             <View style={[styles.postmarkOuter, { borderColor: LIME }]}>
               <View style={[styles.postmarkInner, { borderColor: LIME }]}>
                 <Text style={[styles.postmarkText, { color: LIME }]}>有数</Text>
@@ -59,7 +57,7 @@ export function OverviewCard({ total, daily, active, retired, sold }: Props) {
             </View>
           </View>
 
-          <View style={[styles.dash, { borderColor: dash }]} />
+          <DashedRule color={dashColor} />
 
           <View style={styles.statusLabels}>
             <Text style={[styles.statusLabel, { color: c.textSecondary }]}>服役中 {active}</Text>
@@ -81,14 +79,39 @@ export function OverviewCard({ total, daily, active, retired, sold }: Props) {
   );
 }
 
+function DashedRule({ color }: { color: string }) {
+  const [w, setW] = useState(0);
+  return (
+    <View
+      style={styles.dashWrap}
+      onLayout={(e) => {
+        const next = e.nativeEvent.layout.width;
+        if (next !== w) setW(next);
+      }}>
+      {w > 0 ? (
+        <Svg width={w} height={2}>
+          <Line
+            x1={0}
+            y1={1}
+            x2={w}
+            y2={1}
+            stroke={color}
+            strokeWidth={1.5}
+            strokeDasharray="4 3"
+          />
+        </Svg>
+      ) : null}
+    </View>
+  );
+}
+
 function Seg({ ratio, color }: { ratio: number; color: string }) {
-  if (ratio <= 0) return <View style={{ flex: 0.0001 }} />;
+  if (ratio <= 0) return null;
   return (
     <View
       style={{
         flex: Math.max(ratio, 0.04),
-        height: 4,
-        borderRadius: 4,
+        height: 5,
         backgroundColor: color,
       }}
     />
@@ -163,12 +186,7 @@ const styles = StyleSheet.create({
   hole: { position: 'absolute' },
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingRight: 56 },
   kicker: { fontSize: 13 },
-  pill: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 999,
-  },
-  pillText: { fontSize: 12, fontWeight: '600', fontVariant: ['tabular-nums'] },
+  count: { fontSize: 12, fontVariant: ['tabular-nums'] },
   postmarkWrap: {
     position: 'absolute',
     top: 4,
@@ -198,23 +216,21 @@ const styles = StyleSheet.create({
   metrics: { flexDirection: 'row', marginTop: 12 },
   label: { fontSize: 12 },
   value: { marginTop: 4, fontSize: 28, fontWeight: '800', fontVariant: ['tabular-nums'] },
-  dash: {
-    marginTop: 14,
-    borderStyle: 'dashed',
-    borderWidth: 0,
-    borderTopWidth: StyleSheet.hairlineWidth * 2,
+  dashWrap: {
+    marginTop: 12,
+    marginBottom: 12,
+    height: 2,
+    justifyContent: 'center',
   },
   statusLabels: {
     flexDirection: 'row',
-    marginTop: 12,
     marginBottom: 8,
   },
   statusLabel: { flex: 1, fontSize: 11 },
   segmentTrack: {
     flexDirection: 'row',
-    height: 4,
-    borderRadius: 4,
+    height: 5,
+    borderRadius: 999,
     overflow: 'hidden',
-    gap: 3,
   },
 });
