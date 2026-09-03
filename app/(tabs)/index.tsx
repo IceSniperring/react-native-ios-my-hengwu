@@ -9,6 +9,7 @@ import { AssetCard } from '../../src/components/AssetCard';
 import { OverviewCard } from '../../src/components/OverviewCard';
 import { useFilteredAssets, useOverview } from '../../src/hooks';
 import { FilterTabs } from '../../src/native/FilterTabs';
+import { NativeSegmented } from '../../src/native/NativeSegmented';
 import { useColors } from '../../src/useColors';
 import { CATEGORIES, STATUS_FILTERS, type AssetStatus, type CategoryId } from '../../src/types';
 
@@ -23,6 +24,10 @@ export default function HomeScreen() {
   const gap = 10;
   const pad = 16;
   const cardW = (width - pad * 2 - gap) / 2;
+  const statusIndex = Math.max(
+    0,
+    STATUS_FILTERS.findIndex((s) => s.id === status),
+  );
 
   const rows = useMemo(() => {
     const r: (typeof list)[] = [];
@@ -34,12 +39,17 @@ export default function HomeScreen() {
     <View collapsable={false} style={[styles.root, { backgroundColor: c.bg }]}>
       <ScrollView
         contentInsetAdjustmentBehavior="never"
-        style={{ backgroundColor: c.limeHeaderTop }}
-        contentContainerStyle={{ paddingBottom: 24 }}
-        showsVerticalScrollIndicator={false}>
+        style={{ backgroundColor: c.bg }}
+        contentContainerStyle={{
+          // Enough clearance for the floating Liquid Glass tab bar, without a huge empty tail.
+          paddingBottom: Math.max(24, insets.bottom + 72),
+          flexGrow: 1,
+        }}
+        showsVerticalScrollIndicator={false}
+        bounces>
         <LinearGradient
           colors={[c.limeHeaderTop, c.limeHeader]}
-          style={[styles.header, { paddingTop: insets.top + 6 }]}>
+          style={[styles.header, { paddingTop: insets.top }]}>
           <View style={styles.nav}>
             <Text style={[styles.brand, { color: c.headerText }]}>有数</Text>
             <View style={styles.navRight}>
@@ -51,7 +61,7 @@ export default function HomeScreen() {
               </Pressable>
             </View>
           </View>
-          <View style={{ paddingHorizontal: 4, paddingTop: 14, paddingBottom: 18 }}>
+          <View style={{ paddingHorizontal: 4, paddingTop: 8, paddingBottom: 14 }}>
             <OverviewCard
               total={overview.total}
               daily={overview.daily}
@@ -68,10 +78,10 @@ export default function HomeScreen() {
             selected={category}
             onSelect={(id) => setCategory(id as CategoryId)}
           />
-          <FilterTabs
-            items={STATUS_FILTERS}
-            selected={status}
-            onSelect={(id) => setStatus(id as AssetStatus | 'all')}
+          <NativeSegmented
+            values={STATUS_FILTERS.map((s) => s.label)}
+            selectedIndex={statusIndex}
+            onChange={(i) => setStatus(STATUS_FILTERS[i]?.id ?? 'all')}
           />
 
           <View style={{ paddingHorizontal: pad, paddingTop: 8 }}>
@@ -103,9 +113,9 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   header: { paddingHorizontal: 20 },
   nav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  brand: { fontSize: 28, fontWeight: '800', letterSpacing: 1 },
+  brand: { fontSize: 26, fontWeight: '800', letterSpacing: 1 },
   navRight: { flexDirection: 'row', gap: 4 },
-  iconBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  iconBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   sheet: { minHeight: 0 },
   empty: { paddingVertical: 48, alignItems: 'center' },
   emptyTitle: { fontSize: 16, fontWeight: '700' },
