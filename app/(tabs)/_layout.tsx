@@ -1,52 +1,63 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { router } from 'expo-router';
+import { DynamicColorIOS, Platform } from 'react-native';
 
 import { useColors } from '../../src/useColors';
+import { useStore } from '../../src/store';
+
+const iosTabInactive = DynamicColorIOS({ light: '#8E8E93', dark: '#98989D' });
+const iosTabSelected = DynamicColorIOS({ light: '#C8F04D', dark: '#C8F04D' });
 
 export default function TabLayout() {
   const c = useColors();
+  const scheme = useStore((s) => s.colorScheme);
   const screenBg = { backgroundColor: c.bg };
+  const selected = Platform.OS === 'ios' ? iosTabSelected : c.tabSelected;
+  const inactive = Platform.OS === 'ios' ? iosTabInactive : c.tabInactive;
 
   return (
     <NativeTabs
-      tintColor={c.tabSelected}
+      // Force native chrome to match app scheme; Liquid Glass samples this.
+      tintColor={selected}
       minimizeBehavior="never"
       disableTransparentOnScrollEdge
+      // Opaque enough on older iOS; iOS 26 still benefits from consistent icon colors.
+      backgroundColor={scheme === 'dark' ? '#0E0E0E' : '#FFFFFF'}
       labelStyle={{
-        default: { fontSize: 10, color: c.tabInactive },
-        selected: { fontSize: 10, fontWeight: '700', color: c.tabSelected },
+        default: { fontSize: 10, color: inactive },
+        selected: { fontSize: 10, fontWeight: '700', color: selected },
       }}
-      iconColor={{ default: c.tabInactive, selected: c.tabSelected }}>
+      iconColor={{ default: inactive, selected }}>
       <NativeTabs.Trigger name="index" contentStyle={screenBg}>
-        <NativeTabs.Trigger.Label selectedStyle={{ color: c.tabSelected }}>资产</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label selectedStyle={{ color: selected }}>资产</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           sf={{ default: 'shippingbox', selected: 'shippingbox.fill' }}
           md="inventory_2"
-          selectedColor={c.tabSelected}
+          selectedColor={selected}
         />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="insights" contentStyle={screenBg}>
-        <NativeTabs.Trigger.Label selectedStyle={{ color: c.tabSelected }}>洞悉</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label selectedStyle={{ color: selected }}>洞悉</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           sf={{ default: 'chart.pie', selected: 'chart.pie.fill' }}
           md="pie_chart"
-          selectedColor={c.tabSelected}
+          selectedColor={selected}
         />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="wishlist" contentStyle={screenBg}>
-        <NativeTabs.Trigger.Label selectedStyle={{ color: c.tabSelected }}>心愿</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label selectedStyle={{ color: selected }}>心愿</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           sf={{ default: 'heart', selected: 'heart.fill' }}
           md="favorite"
-          selectedColor={c.tabSelected}
+          selectedColor={selected}
         />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="profile" contentStyle={screenBg}>
-        <NativeTabs.Trigger.Label selectedStyle={{ color: c.tabSelected }}>我的</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label selectedStyle={{ color: selected }}>我的</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           sf={{ default: 'person', selected: 'person.fill' }}
           md="person"
-          selectedColor={c.tabSelected}
+          selectedColor={selected}
         />
       </NativeTabs.Trigger>
       {/*
@@ -65,7 +76,7 @@ export default function TabLayout() {
           },
         }}>
         <NativeTabs.Trigger.Label hidden>添加</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="plus" md="add" selectedColor={c.tabSelected} />
+        <NativeTabs.Trigger.Icon sf="plus" md="add" selectedColor={selected} />
       </NativeTabs.Trigger>
     </NativeTabs>
   );

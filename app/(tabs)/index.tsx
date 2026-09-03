@@ -33,7 +33,8 @@ export default function HomeScreen() {
   return (
     <View collapsable={false} style={[styles.root, { backgroundColor: c.bg }]}>
       <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior="never"
+        style={{ backgroundColor: c.limeHeaderTop }}
         contentContainerStyle={{ paddingBottom: 24 }}
         showsVerticalScrollIndicator={false}>
         <LinearGradient
