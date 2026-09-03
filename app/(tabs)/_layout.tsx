@@ -4,16 +4,11 @@ import { router } from 'expo-router';
 import { useColors } from '../../src/useColors';
 import { useStore } from '../../src/store';
 
-/**
- * Avoid DynamicColorIOS on NativeTabs tint/iconColor — iOS 26 liquid glass +
- * dynamic colors are buggy, and opaque objects in native tab props have also
- * been linked to awkward prop freezes in Fabric DEV. Resolve colors from the
- * app scheme instead (Appearance.setColorScheme already keeps UIKit in sync).
- */
 export default function TabLayout() {
   const c = useColors();
   const scheme = useStore((s) => s.colorScheme);
   const screenBg = { backgroundColor: c.bg };
+  // Lime selected tint for the tab bar (not system blue).
   const selected = c.tabSelected;
   const inactive = c.tabInactive;
 
@@ -62,17 +57,18 @@ export default function TabLayout() {
       </NativeTabs.Trigger>
       {/*
         role="search" → trailing liquid-glass accessory.
-        Do not use `disabled` + mutate listeners; preventDefault keeps the add
-        route from focusing while still firing the press handler.
+        Native tabPress event often has no preventDefault — use `disabled`
+        (maps to preventSelection) and open the form from the listener.
+        add.tsx Redirect is a safety net if the route is ever focused.
       */}
       <NativeTabs.Trigger
         name="add"
         role="search"
+        disabled
         contentStyle={screenBg}
         accessibilityLabel="添加物品"
         listeners={{
-          tabPress: (e) => {
-            e.preventDefault();
+          tabPress: () => {
             router.push('/asset/form');
           },
         }}>

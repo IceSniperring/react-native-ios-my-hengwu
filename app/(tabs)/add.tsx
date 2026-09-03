@@ -1,6 +1,6 @@
-import { View } from 'react-native';
+import { Redirect } from 'expo-router';
 
-/** Placeholder route for the center Add tab. Selection is disabled; tap opens the form via tabPress. */
+/** Safety net: never stay on the Add tab; open the form flow from tabPress instead. */
 export default function AddTab() {
-  return <View style={{ flex: 1 }} />;
+  return <Redirect href="/(tabs)" />;
 }
