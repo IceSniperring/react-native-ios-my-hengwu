@@ -28,8 +28,8 @@ export default function ProfileScreen() {
       contentContainerStyle={[styles.root, { paddingTop: insets.top }]}>
       <Text style={[styles.title, { color: c.text }]}>我的</Text>
       <View style={styles.hero}>
-        <View style={[styles.avatar, { backgroundColor: c.lime }]}>
-          <Text style={{ fontSize: 28, fontWeight: '800', color: '#111' }}>有</Text>
+        <View style={[styles.avatar, { backgroundColor: c.tint }]}>
+          <Text style={{ fontSize: 28, fontWeight: '800', color: '#FFFFFF' }}>有</Text>
         </View>
         <View>
           <Text style={[styles.name, { color: c.text }]}>有数 · 本地账本</Text>
@@ -49,7 +49,7 @@ export default function ProfileScreen() {
         <Switch
           value={dark}
           onValueChange={(v) => setColorScheme(v ? 'dark' : 'light')}
-          trackColor={{ false: '#E5E5EA', true: c.lime }}
+          trackColor={{ false: '#E5E5EA', true: c.tint }}
           thumbColor="#FFFFFF"
           ios_backgroundColor="#E5E5EA"
         />
