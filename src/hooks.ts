@@ -2,23 +2,30 @@ import { useMemo } from 'react';
 
 import { dailyCost } from './calc';
 import { useStore } from './store';
-import type { AssetStatus, CategoryId } from './types';
+import type { Asset, AssetStatus, CategoryId } from './types';
 
 export function useAsset(id?: string) {
   return useStore((s) => s.assets.find((a) => a.id === id));
 }
 
+export function filterAssets(
+  assets: Asset[],
+  category: CategoryId,
+  status: AssetStatus | 'all',
+  q = '',
+) {
+  const query = q.trim().toLowerCase();
+  return assets.filter((a) => {
+    if (category !== 'all' && a.category !== category) return false;
+    if (status !== 'all' && a.status !== status) return false;
+    if (query && !a.name.toLowerCase().includes(query)) return false;
+    return true;
+  });
+}
+
 export function useFilteredAssets(category: CategoryId, status: AssetStatus | 'all', q = '') {
   const assets = useStore((s) => s.assets);
-  return useMemo(() => {
-    const query = q.trim().toLowerCase();
-    return assets.filter((a) => {
-      if (category !== 'all' && a.category !== category) return false;
-      if (status !== 'all' && a.status !== status) return false;
-      if (query && !a.name.toLowerCase().includes(query)) return false;
-      return true;
-    });
-  }, [assets, category, status, q]);
+  return useMemo(() => filterAssets(assets, category, status, q), [assets, category, status, q]);
 }
 
 export function useOverview() {

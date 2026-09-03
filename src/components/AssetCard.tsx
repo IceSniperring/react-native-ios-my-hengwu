@@ -1,7 +1,8 @@
 import { Image } from 'expo-image';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type DimensionValue } from 'react-native';
+import Svg, { Polygon } from 'react-native-svg';
 
-import { dailyCost, formatMoney, holdingDays, statusColor } from '../calc';
+import { dailyCost, formatMoney, holdingDays, statusColor, targetProgress } from '../calc';
 import { PRODUCT_IMAGES } from '../images';
 import { shadow } from '../theme';
 import type { Asset } from '../types';
@@ -25,7 +26,12 @@ export function AssetCard({ asset, onPress, size }: Props) {
       ? PRODUCT_IMAGES[asset.imageKey]
       : undefined;
   const daily = dailyCost(asset);
+  const progress = targetProgress(asset);
+  const progressLabel = Math.round(progress * 100);
+  const progressWidth = (progress * 100 + '%') as DimensionValue;
   const badgeBg = scheme === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(0,0,0,0.35)';
+  const cardBg = scheme === 'light' ? '#FFFFFF' : '#1C1C1E';
+  const arrowColor = scheme === 'light' ? '#111111' : '#FFFFFF';
 
   return (
     <Pressable
@@ -33,9 +39,7 @@ export function AssetCard({ asset, onPress, size }: Props) {
       style={({ pressed }) => [
         styles.card,
         size ? { width: size, height: size } : { width: '100%', aspectRatio: 1 },
-        {
-          backgroundColor: scheme === 'light' ? '#FFFFFF' : '#1C1C1E',
-        },
+        { backgroundColor: cardBg },
         scheme === 'light' && shadow.card,
         pressed && { opacity: 0.88, transform: [{ scale: 0.985 }] },
       ]}>
@@ -62,9 +66,29 @@ export function AssetCard({ asset, onPress, size }: Props) {
       </Text>
 
       <View style={styles.footer}>
-        <Text style={[styles.daily, { color: c.text }]} numberOfLines={1}>
-          {formatMoney(daily, 2)}/天
-        </Text>
+        <View style={styles.costRow}>
+          <Text style={[styles.daily, { color: c.text }]} numberOfLines={1}>
+            {formatMoney(daily, 2)}/天
+          </Text>
+          <Text style={[styles.progressValue, { color: c.textSecondary }]}>
+            {progressLabel}%
+          </Text>
+        </View>
+        <View style={[styles.progressTrack, { backgroundColor: c.track }]}>
+          <View
+            style={[
+              styles.progressFill,
+              { width: progressWidth, backgroundColor: c.lime },
+            ]}
+          />
+        </View>
+        <View style={styles.arrowRow}>
+          <View style={[styles.arrowSlot, { left: progressWidth }]}>
+            <Svg width={10} height={6} viewBox="0 0 10 6">
+              <Polygon points="5,0 0,6 10,6" fill={arrowColor} />
+            </Svg>
+          </View>
+        </View>
       </View>
     </Pressable>
   );
@@ -105,5 +129,11 @@ const styles = StyleSheet.create({
   name: { marginTop: 10, fontSize: 15, fontWeight: '600' },
   meta: { marginTop: 4, fontSize: 12, fontWeight: '400' },
   footer: { flex: 1, justifyContent: 'flex-end' },
-  daily: { fontSize: 20, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  costRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
+  daily: { fontSize: 18, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  progressValue: { fontSize: 11, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  progressTrack: { height: 6, marginTop: 7, borderRadius: 999 },
+  progressFill: { height: '100%', borderRadius: 999 },
+  arrowRow: { height: 6, marginTop: 3 },
+  arrowSlot: { position: 'absolute', top: 0, marginLeft: -5 },
 });

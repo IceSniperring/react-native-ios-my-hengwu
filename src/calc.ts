@@ -1,4 +1,5 @@
 import type { Asset, AssetStatus } from './types';
+import { LIME } from './theme';
 
 export function startOfDay(d: Date) {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -117,7 +118,7 @@ export function dailyCostHistory(asset: Asset, points = 12) {
 }
 
 export function statusColor(status: AssetStatus) {
-  if (status === 'active') return '#C8F04D';
+  if (status === 'active') return LIME;
   if (status === 'retired') return '#FF9500';
   return '#8E8E93';
 }

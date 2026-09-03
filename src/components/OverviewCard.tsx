@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import Svg, { Line } from 'react-native-svg';
+import { StyleSheet, Text, View, type DimensionValue } from 'react-native';
+import Svg, { Line, Path } from 'react-native-svg';
 
 import { formatMoney } from '../calc';
 import { LIME } from '../theme';
@@ -47,28 +47,47 @@ export function OverviewCard({ total, daily, active, retired, sold }: Props) {
         </View>
       </View>
 
-      <DashedRule color={dashColor} />
+      <DashedRule color={dashColor} notchColor={c.bg} />
 
-      <View style={styles.statusLabels}>
-        <Text style={[styles.statusLabel, { color: c.textSecondary }]}>服役中 {active}</Text>
-        <Text style={[styles.statusLabel, { color: c.textSecondary, textAlign: 'center' }]}>
-          已退役 {retired}
-        </Text>
-        <Text style={[styles.statusLabel, { color: c.textSecondary, textAlign: 'right' }]}>
-          已卖出 {sold}
-        </Text>
-      </View>
-      <View style={[styles.segmentTrack, { backgroundColor: c.track }]}>
-        <Seg ratio={active / sum} color={LIME} />
-        <Seg ratio={retired / sum} color={c.statusRetired} />
-        <Seg ratio={sold / sum} color={c.statusSold} />
+      {/* Three independent columns, each with its own label and share bar. */}
+      <View style={styles.statusRow}>
+        <StatusColumn
+          label="服役中"
+          count={active}
+          ratio={active / sum}
+          fill={LIME}
+          track={c.track}
+          labelColor={c.textSecondary}
+        />
+        <StatusColumn
+          label="已退役"
+          count={retired}
+          ratio={retired / sum}
+          fill={c.statusRetired}
+          track={c.track}
+          labelColor={c.textSecondary}
+        />
+        <StatusColumn
+          label="已卖出"
+          count={sold}
+          ratio={sold / sum}
+          fill={c.statusSold}
+          track={c.track}
+          labelColor={c.textSecondary}
+        />
       </View>
     </View>
   );
 }
 
-function DashedRule({ color }: { color: string }) {
+function DashedRule({ color, notchColor }: { color: string; notchColor: string }) {
   const [w, setW] = useState(0);
+  // Box is w × 18 with the dash centreline at y = 9. Each card edge carries a
+  // ticket-style tear notch: a semicircular bite (radius 7) centred on the
+  // dash line, painted in the page colour so the background shows through.
+  const r = 7;
+  const top = 9 - r;
+  const bottom = 9 + r;
   return (
     <View
       style={styles.dashWrap}
@@ -77,12 +96,14 @@ function DashedRule({ color }: { color: string }) {
         if (next !== w) setW(next);
       }}>
       {w > 0 ? (
-        <Svg width={w} height={2}>
+        <Svg width={w} height={18}>
+          <Path d={`M0,${top} A${r},${r} 0 0,1 0,${bottom} Z`} fill={notchColor} />
+          <Path d={`M${w},${top} A${r},${r} 0 0,0 ${w},${bottom} Z`} fill={notchColor} />
           <Line
-            x1={0}
-            y1={1}
-            x2={w}
-            y2={1}
+            x1={r + 2}
+            y1={9}
+            x2={w - r - 2}
+            y2={9}
             stroke={color}
             strokeWidth={1.5}
             strokeDasharray="4 3"
@@ -93,16 +114,34 @@ function DashedRule({ color }: { color: string }) {
   );
 }
 
-function Seg({ ratio, color }: { ratio: number; color: string }) {
-  if (ratio <= 0) return null;
+function StatusColumn({
+  label,
+  count,
+  ratio,
+  fill,
+  track,
+  labelColor,
+}: {
+  label: string;
+  count: number;
+  ratio: number;
+  fill: string;
+  track: string;
+  labelColor: string;
+}) {
+  const pct = Math.max(0, Math.min(1, ratio)) * 100;
+  const fillWidth = (pct + '%') as DimensionValue;
   return (
-    <View
-      style={{
-        flex: Math.max(ratio, 0.04),
-        height: 5,
-        backgroundColor: color,
-      }}
-    />
+    <View style={styles.statusColumn}>
+      <Text style={[styles.statusLabel, { color: labelColor }]} numberOfLines={1}>
+        {label} {count}
+      </Text>
+      <View style={[styles.columnTrack, { backgroundColor: track }]}>
+        {pct > 0 ? (
+          <View style={[styles.columnFill, { width: fillWidth, backgroundColor: fill }]} />
+        ) : null}
+      </View>
+    </View>
   );
 }
 
@@ -125,20 +164,15 @@ const styles = StyleSheet.create({
   label: { fontSize: 12 },
   value: { marginTop: 4, fontSize: 28, fontWeight: '800', fontVariant: ['tabular-nums'] },
   dashWrap: {
-    marginTop: 12,
-    marginBottom: 12,
-    height: 2,
+    marginTop: 4,
+    marginBottom: 4,
+    marginHorizontal: -16,
+    height: 18,
     justifyContent: 'center',
   },
-  statusLabels: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  statusLabel: { flex: 1, fontSize: 11 },
-  segmentTrack: {
-    flexDirection: 'row',
-    height: 5,
-    borderRadius: 999,
-    overflow: 'hidden',
-  },
+  statusRow: { flexDirection: 'row', gap: 12 },
+  statusColumn: { flex: 1 },
+  statusLabel: { fontSize: 11, marginBottom: 8 },
+  columnTrack: { height: 5, borderRadius: 999, overflow: 'hidden' },
+  columnFill: { height: '100%', borderRadius: 999 },
 });
