@@ -42,7 +42,8 @@ export function GlassIconButton({ name, onPress, accessibilityLabel }: Props) {
   const c = useColors();
   const glass = loadGlass();
   const glassOn = canUseGlass(glass);
-  const icon = <SymbolView name={name} size={18} tintColor={c.tint} />;
+  // Monochrome — follow primary text, not system blue tint.
+  const icon = <SymbolView name={name} size={18} tintColor={c.text} />;
 
   if (glassOn && glass) {
     const { GlassView } = glass;

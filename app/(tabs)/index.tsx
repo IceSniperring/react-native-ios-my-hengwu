@@ -1,10 +1,17 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import {
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
-  useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
@@ -44,18 +51,16 @@ export default function HomeScreen() {
     return r;
   }, [list]);
 
-  const onScroll = useAnimatedScrollHandler({
-    onScroll: (e) => {
-      scrollY.value = e.contentOffset.y;
-    },
-  });
+  // RN ScrollView stickyHeaderIndices is reliable; Reanimated's ScrollView often is not.
+  // Writing the shared value from the JS scroll handler is enough for title animations.
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    scrollY.value = e.nativeEvent.contentOffset.y;
+  };
 
-  // NativeTabs already respects the top safe area on modern iOS — only a light inset.
   const topPad = Math.min(insets.top, 12);
 
   const largeTitleStyle = useAnimatedStyle(() => {
-    const t = scrollY.value;
-    const progress = interpolate(t, [0, COLLAPSE], [0, 1], Extrapolation.CLAMP);
+    const progress = interpolate(scrollY.value, [0, COLLAPSE], [0, 1], Extrapolation.CLAMP);
     const travel = (width - pad * 2) / 2 - 40;
     return {
       opacity: interpolate(progress, [0, 0.85], [1, 0], Extrapolation.CLAMP),
@@ -66,9 +71,6 @@ export default function HomeScreen() {
     };
   });
 
-  // Compact title lives OUTSIDE the ScrollView (absolute overlay).
-  // Reanimated animated styles on stickyHeaderIndices children freeze in RN Fabric DEV
-  // (reanimated#8284 / #8454) — do not put useAnimatedStyle on the sticky row.
   const compactTitleStyle = useAnimatedStyle(() => {
     const progress = interpolate(scrollY.value, [COLLAPSE * 0.45, COLLAPSE], [0, 1], Extrapolation.CLAMP);
     return {
@@ -92,7 +94,6 @@ export default function HomeScreen() {
         />
       </View>
 
-      {/* Centered compact title overlay — not a sticky animated child */}
       <Animated.Text
         pointerEvents="none"
         style={[
@@ -103,7 +104,7 @@ export default function HomeScreen() {
         有数
       </Animated.Text>
 
-      <Animated.ScrollView
+      <ScrollView
         onScroll={onScroll}
         scrollEventThrottle={16}
         stickyHeaderIndices={[1]}
@@ -111,12 +112,11 @@ export default function HomeScreen() {
         style={{ backgroundColor: c.bg }}
         contentContainerStyle={{
           paddingBottom: Math.max(24, insets.bottom + 72),
-          flexGrow: 1,
         }}
         showsVerticalScrollIndicator={false}
         bounces>
         {/* 0 — large title + overview (scrolls away) */}
-        <View style={[styles.header, { paddingTop: topPad + 4 }]}>
+        <View style={[styles.header, { paddingTop: topPad + 4 }]} collapsable={false}>
           <View style={styles.nav}>
             <Animated.Text style={[styles.brand, { color: c.text }, largeTitleStyle]}>有数</Animated.Text>
             <View style={{ width: 84, height: 36 }} />
@@ -132,9 +132,10 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* 1 — sticky filters: plain View only (no Reanimated styles) */}
-        <View style={[styles.sticky, { backgroundColor: c.bg, borderBottomColor: c.line }]}>
-          {/* spacer so sticky content clears the compact overlay title */}
+        {/* 1 — sticky category / status filters (plain View, opaque bg required for sticky) */}
+        <View
+          collapsable={false}
+          style={[styles.sticky, { backgroundColor: c.bg, borderBottomColor: c.line }]}>
           <View style={{ height: 22, marginBottom: 4 }} />
           <FilterTabs
             items={CATEGORIES}
@@ -168,7 +169,7 @@ export default function HomeScreen() {
             ))
           )}
         </View>
-      </Animated.ScrollView>
+      </ScrollView>
     </View>
   );
 }
