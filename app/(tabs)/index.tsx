@@ -56,7 +56,6 @@ export default function HomeScreen() {
   const largeTitleStyle = useAnimatedStyle(() => {
     const t = scrollY.value;
     const progress = interpolate(t, [0, COLLAPSE], [0, 1], Extrapolation.CLAMP);
-    // Drift toward horizontal center while shrinking
     const travel = (width - pad * 2) / 2 - 40;
     return {
       opacity: interpolate(progress, [0, 0.85], [1, 0], Extrapolation.CLAMP),
@@ -67,6 +66,9 @@ export default function HomeScreen() {
     };
   });
 
+  // Compact title lives OUTSIDE the ScrollView (absolute overlay).
+  // Reanimated animated styles on stickyHeaderIndices children freeze in RN Fabric DEV
+  // (reanimated#8284 / #8454) — do not put useAnimatedStyle on the sticky row.
   const compactTitleStyle = useAnimatedStyle(() => {
     const progress = interpolate(scrollY.value, [COLLAPSE * 0.45, COLLAPSE], [0, 1], Extrapolation.CLAMP);
     return {
@@ -75,17 +77,8 @@ export default function HomeScreen() {
     };
   });
 
-  const stickyChromeStyle = useAnimatedStyle(() => {
-    const progress = interpolate(scrollY.value, [40, COLLAPSE], [0, 1], Extrapolation.CLAMP);
-    return {
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: progress > 0.2 ? c.line : 'transparent',
-    };
-  });
-
   return (
     <View collapsable={false} style={[styles.root, { backgroundColor: c.bg }]}>
-      {/* Floating glass actions — single SafeArea, not stacked with scroll padding */}
       <View pointerEvents="box-none" style={[styles.floatingActions, { top: insets.top + 4 }]}>
         <GlassIconButton
           name="magnifyingglass"
@@ -98,6 +91,17 @@ export default function HomeScreen() {
           onPress={() => router.push('/calendar')}
         />
       </View>
+
+      {/* Centered compact title overlay — not a sticky animated child */}
+      <Animated.Text
+        pointerEvents="none"
+        style={[
+          styles.compactOverlay,
+          { top: insets.top + 10, color: c.text },
+          compactTitleStyle,
+        ]}>
+        有数
+      </Animated.Text>
 
       <Animated.ScrollView
         onScroll={onScroll}
@@ -115,7 +119,6 @@ export default function HomeScreen() {
         <View style={[styles.header, { paddingTop: topPad + 4 }]}>
           <View style={styles.nav}>
             <Animated.Text style={[styles.brand, { color: c.text }, largeTitleStyle]}>有数</Animated.Text>
-            {/* Spacer matching floating buttons so title doesn't sit under them */}
             <View style={{ width: 84, height: 36 }} />
           </View>
           <View style={{ paddingTop: 12 }}>
@@ -129,11 +132,10 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* 1 — sticky: compact centered title + category / status filters */}
-        <Animated.View style={[styles.sticky, { backgroundColor: c.bg }, stickyChromeStyle]}>
-          <Animated.Text style={[styles.compactTitle, { color: c.text }, compactTitleStyle]}>
-            有数
-          </Animated.Text>
+        {/* 1 — sticky filters: plain View only (no Reanimated styles) */}
+        <View style={[styles.sticky, { backgroundColor: c.bg, borderBottomColor: c.line }]}>
+          {/* spacer so sticky content clears the compact overlay title */}
+          <View style={{ height: 22, marginBottom: 4 }} />
           <FilterTabs
             items={CATEGORIES}
             selected={category}
@@ -144,9 +146,9 @@ export default function HomeScreen() {
             selectedIndex={statusIndex}
             onChange={(i) => setStatus(STATUS_FILTERS[i]?.id ?? 'all')}
           />
-        </Animated.View>
+        </View>
 
-        {/* 2 — asset grid (only this keeps scrolling once filters stick) */}
+        {/* 2 — asset grid */}
         <View style={{ paddingHorizontal: pad, paddingTop: 8, backgroundColor: c.bg }}>
           {list.length === 0 ? (
             <View style={styles.empty}>
@@ -180,16 +182,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
-  header: { paddingHorizontal: 16 },
-  nav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 36 },
-  brand: { fontSize: 34, fontWeight: '800', letterSpacing: 0.5 },
-  sticky: { paddingTop: 4, paddingBottom: 4, zIndex: 10 },
-  compactTitle: {
+  compactOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    zIndex: 15,
     textAlign: 'center',
     fontSize: 17,
     fontWeight: '700',
-    marginBottom: 4,
-    height: 22,
+  },
+  header: { paddingHorizontal: 16 },
+  nav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 36 },
+  brand: { fontSize: 34, fontWeight: '800', letterSpacing: 0.5 },
+  sticky: {
+    paddingTop: 4,
+    paddingBottom: 4,
+    zIndex: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   empty: { paddingVertical: 48, alignItems: 'center' },
   emptyTitle: { fontSize: 16, fontWeight: '700' },
