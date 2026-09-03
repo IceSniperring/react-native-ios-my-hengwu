@@ -232,7 +232,11 @@ const styles = StyleSheet.create({
   photoBtn: { borderRadius: 12, paddingVertical: 10, alignItems: 'center', flex: 1 },
   photoBtnText: { fontWeight: '700' },
   liftingMask: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(0,0,0,0.25)',
