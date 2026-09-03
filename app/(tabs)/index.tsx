@@ -51,14 +51,11 @@ export default function HomeScreen() {
     return r;
   }, [list]);
 
-  // RN ScrollView stickyHeaderIndices is reliable; Reanimated's ScrollView often is not.
-  // Writing the shared value from the JS scroll handler is enough for title animations.
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     scrollY.value = e.nativeEvent.contentOffset.y;
   };
 
-  const topPad = Math.min(insets.top, 12);
-
+  // Large title in the scrolling header fades / drifts as you scroll.
   const largeTitleStyle = useAnimatedStyle(() => {
     const progress = interpolate(scrollY.value, [0, COLLAPSE], [0, 1], Extrapolation.CLAMP);
     const travel = (width - pad * 2) / 2 - 40;
@@ -71,56 +68,52 @@ export default function HomeScreen() {
     };
   });
 
+  // Compact title lives in the FIXED top bar (above ScrollView), so sticky
+  // category tabs always sit *below*「有数」— never climb over it.
   const compactTitleStyle = useAnimatedStyle(() => {
     const progress = interpolate(scrollY.value, [COLLAPSE * 0.45, COLLAPSE], [0, 1], Extrapolation.CLAMP);
     return {
       opacity: progress,
-      transform: [{ translateY: interpolate(progress, [0, 1], [6, 0], Extrapolation.CLAMP) }],
     };
   });
 
   return (
     <View collapsable={false} style={[styles.root, { backgroundColor: c.bg }]}>
-      <View pointerEvents="box-none" style={[styles.floatingActions, { top: insets.top + 4 }]}>
-        <GlassIconButton
-          name="magnifyingglass"
-          accessibilityLabel="搜索"
-          onPress={() => router.push('/search')}
-        />
-        <GlassIconButton
-          name="calendar"
-          accessibilityLabel="购入日历"
-          onPress={() => router.push('/calendar')}
-        />
+      {/* Fixed chrome: title + search/calendar — always above sticky filters */}
+      <View style={[styles.topChrome, { paddingTop: insets.top, backgroundColor: c.bg }]}>
+        <View style={styles.topRow}>
+          <Animated.Text style={[styles.compactTitle, { color: c.text }, compactTitleStyle]}>
+            有数
+          </Animated.Text>
+          <View style={styles.topActions}>
+            <GlassIconButton
+              name="magnifyingglass"
+              accessibilityLabel="搜索"
+              onPress={() => router.push('/search')}
+            />
+            <GlassIconButton
+              name="calendar"
+              accessibilityLabel="购入日历"
+              onPress={() => router.push('/calendar')}
+            />
+          </View>
+        </View>
       </View>
-
-      <Animated.Text
-        pointerEvents="none"
-        style={[
-          styles.compactOverlay,
-          { top: insets.top + 10, color: c.text },
-          compactTitleStyle,
-        ]}>
-        有数
-      </Animated.Text>
 
       <ScrollView
         onScroll={onScroll}
         scrollEventThrottle={16}
         stickyHeaderIndices={[1]}
         contentInsetAdjustmentBehavior="never"
-        style={{ backgroundColor: c.bg }}
+        style={{ backgroundColor: c.bg, flex: 1 }}
         contentContainerStyle={{
           paddingBottom: Math.max(24, insets.bottom + 72),
         }}
         showsVerticalScrollIndicator={false}
         bounces>
         {/* 0 — large title + overview (scrolls away) */}
-        <View style={[styles.header, { paddingTop: topPad + 4 }]} collapsable={false}>
-          <View style={styles.nav}>
-            <Animated.Text style={[styles.brand, { color: c.text }, largeTitleStyle]}>有数</Animated.Text>
-            <View style={{ width: 84, height: 36 }} />
-          </View>
+        <View style={styles.header} collapsable={false}>
+          <Animated.Text style={[styles.brand, { color: c.text }, largeTitleStyle]}>有数</Animated.Text>
           <View style={{ paddingTop: 12 }}>
             <OverviewCard
               total={overview.total}
@@ -132,11 +125,10 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* 1 — sticky category / status filters (plain View, opaque bg required for sticky) */}
+        {/* 1 — sticky: 分类 → 状态（永远在固定标题栏下方） */}
         <View
           collapsable={false}
           style={[styles.sticky, { backgroundColor: c.bg, borderBottomColor: c.line }]}>
-          <View style={{ height: 22, marginBottom: 4 }} />
           <FilterTabs
             items={CATEGORIES}
             selected={category}
@@ -176,24 +168,31 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  floatingActions: {
-    position: 'absolute',
-    right: 16,
+  topChrome: {
     zIndex: 20,
-    flexDirection: 'row',
-    gap: 8,
+    paddingHorizontal: 16,
+    paddingBottom: 4,
   },
-  compactOverlay: {
+  topRow: {
+    minHeight: 36,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  compactTitle: {
     position: 'absolute',
     left: 0,
     right: 0,
-    zIndex: 15,
     textAlign: 'center',
     fontSize: 17,
     fontWeight: '700',
   },
-  header: { paddingHorizontal: 16 },
-  nav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 36 },
+  topActions: {
+    flexDirection: 'row',
+    gap: 8,
+    zIndex: 1,
+  },
+  header: { paddingHorizontal: 16, paddingTop: 4 },
   brand: { fontSize: 34, fontWeight: '800', letterSpacing: 0.5 },
   sticky: {
     paddingTop: 4,
