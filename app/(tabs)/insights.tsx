@@ -21,7 +21,7 @@ const RANGES = [
   { id: '6m', label: '近半年' },
 ] as const;
 
-const CAT_COLORS_LIGHT = ['#C8F04D', '#3EE0C8', '#5B8CFF', '#A78BFA', '#FF8A3A', '#F5C400'];
+const CAT_COLORS_LIGHT = ['#007AFF', '#64D2FF', '#AF52DE', '#FF9500', '#34C759', '#FF453A'];
 
 export default function InsightsScreen() {
   const insets = useSafeAreaInsets();
@@ -79,7 +79,7 @@ export default function InsightsScreen() {
 
       <ScrollView contentInsetAdjustmentBehavior="never" contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <View style={[styles.card, { backgroundColor: c.card, borderColor: c.line }]}>
-          <Text style={[styles.smart, { color: c.limeDark }]}>✦ 智能发现</Text>
+          <Text style={[styles.smart, { color: c.tint }]}>✦ 智能发现</Text>
           <InsightRow
             icon="cube"
             title="闲置超过 1 年"
@@ -105,7 +105,7 @@ export default function InsightsScreen() {
           <Text style={[styles.big, { color: c.text }]}>{formatMoney(overview.activeValue + overview.idleValue)}</Text>
           <View style={{ flexDirection: 'row', marginTop: 16, alignItems: 'center' }}>
             <View style={{ flex: 1, gap: 10 }}>
-              <LegendDot color={c.lime} label={`使用中  ${Math.round((overview.activeValue / statusTotal) * 100)}%`} value={formatMoney(overview.activeValue)} text={c.text} muted={c.textSecondary} />
+              <LegendDot color={c.statusActive} label={`使用中  ${Math.round((overview.activeValue / statusTotal) * 100)}%`} value={formatMoney(overview.activeValue)} text={c.text} muted={c.textSecondary} />
               <LegendDot color={c.teal} label={`闲置中  ${Math.round((overview.idleValue / statusTotal) * 100)}%`} value={formatMoney(overview.idleValue)} text={c.text} muted={c.textSecondary} />
               <LegendDot color={c.orange} label={`已卖出  ${Math.round((overview.soldValue / statusTotal) * 100)}%`} value={formatMoney(overview.soldValue)} text={c.text} muted={c.textSecondary} />
             </View>
