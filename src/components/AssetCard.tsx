@@ -58,7 +58,7 @@ export function AssetCard({ asset, onPress }: Props) {
           {asset.name}
         </Text>
         <Text style={[styles.meta, { color: c.textSecondary }]}>
-          {formatMoney(asset.purchasePrice, 0)}  |  {days}天
+          {formatMoney(asset.purchasePrice, 0)} · {days}天
         </Text>
         <Text style={[styles.daily, { color: c.text }]}>{formatDaily(dailyCost(asset))}</Text>
         <View style={{ marginTop: 8 }}>
