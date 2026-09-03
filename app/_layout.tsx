@@ -2,7 +2,7 @@ import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo } from 'react';
-import { Appearance, Platform, View } from 'react-native';
+import { Platform, View } from 'react-native';
 
 import { useStore } from '../src/store';
 import { useColors } from '../src/useColors';
@@ -29,11 +29,6 @@ export default function RootLayout() {
   useEffect(() => {
     if (hydrated) SplashScreen.hideAsync();
   }, [hydrated]);
-
-  // Keep native UI (Liquid Glass tab bar / status bar) in sync with app dark mode.
-  useEffect(() => {
-    Appearance.setColorScheme(scheme);
-  }, [scheme]);
 
   const navTheme = useMemo(() => {
     const base = scheme === 'dark' ? DarkTheme : DefaultTheme;

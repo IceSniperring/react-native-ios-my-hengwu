@@ -1,7 +1,7 @@
 export type ColorScheme = 'light' | 'dark';
 
 /** Brand lime — tab bar selected only (designer lock) */
-export const LIME = '#C8F04D';
+export const LIME = '#A9D62E';
 
 export const palettes = {
   light: {
@@ -15,6 +15,7 @@ export const palettes = {
     blue: '#007AFF',
     purple: '#AF52DE',
     lime: LIME,
+    limeDark: '#607D0B',
     bg: '#F2F2F7',
     surface: '#FFFFFF',
     card: '#FFFFFF',
@@ -46,6 +47,7 @@ export const palettes = {
     blue: '#0A84FF',
     purple: '#BF5AF2',
     lime: LIME,
+    limeDark: '#B8E33C',
     bg: '#000000',
     surface: '#1C1C1E',
     card: '#1C1C1E',

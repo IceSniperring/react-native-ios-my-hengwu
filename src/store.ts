@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Appearance } from 'react-native';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
@@ -53,10 +52,7 @@ export const useStore = create<State>()(
     (set, get) => ({
       hydrated: false,
       colorScheme: 'light',
-      setColorScheme: (scheme) => {
-        Appearance.setColorScheme(scheme);
-        set({ colorScheme: scheme });
-      },
+      setColorScheme: (scheme) => set({ colorScheme: scheme }),
       assets: demoAssets(),
       wishes: demoWishes(),
       plans: demoPlans(),
@@ -113,10 +109,7 @@ export const useStore = create<State>()(
         plans: s.plans,
         colorScheme: s.colorScheme,
       }),
-      onRehydrateStorage: () => (state) => {
-        if (state?.colorScheme) Appearance.setColorScheme(state.colorScheme);
-        useStore.getState().setHydrated();
-      },
+      onRehydrateStorage: () => () => useStore.getState().setHydrated(),
     },
   ),
 );

@@ -41,8 +41,8 @@
   },
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "ios:dev": "expo run:ios",
     "ios:open": "open -a Simulator && xcrun simctl boot 'iPhone 17' || true && xcrun simctl launch booted host.exp.Exponent && xcrun simctl openurl booted exp://127.0.0.1:8081",
     "web": "expo start --web"
