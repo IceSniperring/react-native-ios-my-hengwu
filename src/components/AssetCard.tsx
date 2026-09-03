@@ -46,7 +46,7 @@ export function AssetCard({ asset, onPress, size }: Props) {
             <View style={[styles.thumbImg, { backgroundColor: c.chip }]} />
           )}
         </View>
-        <View style={[styles.badge, { backgroundColor: c.badgeBg }]}>
+        <View style={[styles.badge, { backgroundColor: scheme === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(0,0,0,0.35)' }]}>
           <View style={[styles.dot, { backgroundColor: statusColor(asset.status) }]} />
           <Text style={[styles.badgeText, { color: c.text }]}>{STATUS_LABEL[asset.status]}</Text>
         </View>
