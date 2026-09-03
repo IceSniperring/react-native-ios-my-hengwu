@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 
 import { useColors } from '../useColors';
 
@@ -15,42 +15,52 @@ export function FilterTabs({
 }) {
   const c = useColors();
   return (
-    <View style={styles.anchor}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.row}>
-        {items.map((item) => {
-          const on = item.id === selected;
-          return (
-            <Pressable key={item.id} onPress={() => onSelect(item.id)} style={styles.item}>
-              <Text style={[styles.label, { color: on ? c.tabSelected : c.textSecondary }, on && styles.on]}>
-                {item.label}
-              </Text>
-              <View style={[styles.line, { backgroundColor: on ? c.tabSelected : 'transparent' }]} />
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-    </View>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.row}>
+      {items.map((item) => {
+        const on = item.id === selected;
+        return (
+          <Pressable
+            key={item.id}
+            onPress={() => onSelect(item.id)}
+            style={[
+              styles.chip,
+              {
+                backgroundColor: on ? c.chipSelectedBg : c.chip,
+              },
+            ]}>
+            <Text
+              style={[
+                styles.label,
+                {
+                  color: on ? c.chipSelectedText : c.textSecondary,
+                  fontWeight: on ? '700' : '500',
+                },
+              ]}>
+              {item.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  anchor: {
-    alignSelf: 'stretch',
-    alignItems: 'flex-start',
-  },
   row: {
     flexGrow: 0,
-    alignItems: 'flex-end',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: 6,
-    paddingBottom: 2,
-    gap: 18,
+    paddingBottom: 8,
+    gap: 8,
   },
-  item: { alignItems: 'center' },
-  label: { fontSize: 14, fontWeight: '500' },
-  on: { fontWeight: '800' },
-  line: { marginTop: 6, width: 16, height: 3, borderRadius: 2 },
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 999,
+  },
+  label: { fontSize: 14 },
 });
