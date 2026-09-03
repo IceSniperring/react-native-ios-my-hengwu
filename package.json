@@ -10,6 +10,7 @@
     "expo": "~57.0.19",
     "expo-constants": "~57.0.17",
     "expo-font": "~57.0.3",
+    "expo-glass-effect": "~57.0.1",
     "expo-haptics": "~57.0.2",
     "expo-image": "~57.0.4",
     "expo-image-picker": "~57.0.15",
@@ -29,6 +30,7 @@
     "react-native-svg": "15.15.4",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.10.1",
+    "stickerizer": "file:./modules/stickerizer",
     "zustand": "^5.0.15"
   },
   "devDependencies": {
@@ -39,6 +41,7 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
+    "ios:dev": "expo run:ios",
     "ios:open": "open -a Simulator && xcrun simctl boot 'iPhone 17' || true && xcrun simctl launch booted host.exp.Exponent && xcrun simctl openurl booted exp://127.0.0.1:8081",
     "web": "expo start --web"
   },
