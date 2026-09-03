@@ -28,7 +28,7 @@ export function FilterTabs({
             style={[
               styles.chip,
               {
-                backgroundColor: on ? c.chipSelectedBg : c.chip,
+                backgroundColor: on ? c.chipSelectedBg : c.fill2,
               },
             ]}>
             <Text
@@ -62,5 +62,5 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     borderRadius: 999,
   },
-  label: { fontSize: 14 },
+  label: { fontSize: 13 },
 });
