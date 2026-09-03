@@ -2,7 +2,6 @@ export type ColorScheme = 'light' | 'dark';
 
 /** Brand lime (tab selected / accent) */
 export const LIME = '#C8F04D';
-export const LIME_ON_DARK = '#D4F56A';
 
 export const palettes = {
   light: {
@@ -46,7 +45,7 @@ export const palettes = {
     teal: '#64D2FF',
     blue: '#0A84FF',
     purple: '#BF5AF2',
-    lime: LIME_ON_DARK,
+    lime: LIME,
     bg: '#000000',
     surface: '#1C1C1E',
     card: '#1C1C1E',
@@ -61,7 +60,7 @@ export const palettes = {
     textTertiary: '#636366',
     headerText: '#FFFFFF',
     tabInactive: '#8E8E93',
-    tabSelected: LIME_ON_DARK,
+    tabSelected: LIME,
     danger: '#FF453A',
     success: '#30D158',
     imageBg: '#2C2C2E',
