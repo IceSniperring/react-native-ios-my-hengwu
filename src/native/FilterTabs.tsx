@@ -6,10 +6,10 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
+import Svg, { Path } from 'react-native-svg';
 
 import { useStore } from '../store';
 import { LIME } from '../theme';
-import { useColors } from '../useColors';
 
 type Item = { id: string; label: string };
 type TabLayout = { x: number; width: number };
@@ -18,7 +18,6 @@ type Props = {
   items: Item[];
   selected: string;
   onSelect: (id: string) => void;
-  /** Fractional page index (position + offset) while paging */
   pageOffset?: SharedValue<number>;
 };
 
@@ -26,7 +25,6 @@ const SPRING = { damping: 18, stiffness: 220 };
 const UNSELECTED_LIGHT = 'rgba(60,60,67,0.55)';
 
 export function FilterTabs({ items, selected, onSelect, pageOffset }: Props) {
-  const c = useColors();
   const scheme = useStore((s) => s.colorScheme);
   const [layouts, setLayouts] = useState<Record<string, TabLayout>>({});
   const scrollRef = useRef<ScrollView>(null);
@@ -45,7 +43,6 @@ export function FilterTabs({ items, selected, onSelect, pageOffset }: Props) {
         ws.value = [];
         return;
       }
-      // width = text width + 2px each side
       const strokeW = L.width + 4;
       nextX.push(L.x - 2);
       nextW.push(strokeW);
@@ -120,12 +117,27 @@ export function FilterTabs({ items, selected, onSelect, pageOffset }: Props) {
             </Pressable>
           );
         })}
-        <Animated.View
-          pointerEvents="none"
-          style={[styles.underline, { backgroundColor: LIME }, underlineStyle]}
-        />
+        {/* Sits up into the glyph feet (~3–4px overlap) */}
+        <Animated.View style={[styles.underlineSlot, underlineStyle]} pointerEvents="none">
+          <ComicUnderline />
+        </Animated.View>
       </ScrollView>
     </View>
+  );
+}
+
+function ComicUnderline() {
+  return (
+    <Svg width="100%" height={5} viewBox="0 0 100 5" preserveAspectRatio="none">
+      <Path
+        d="M1.5 3.2 C 16 0.6, 30 4.4, 48 2.4 S 76 0.5, 98.5 3.5"
+        stroke={LIME}
+        strokeWidth={5}
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
   );
 }
 
@@ -136,26 +148,25 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     paddingHorizontal: 16,
     paddingTop: 4,
-    // label lineHeight 20 + gap 6 to underline + underline 5
-    paddingBottom: 6 + 5,
+    // underline overlaps text: only 2px below the 20px line box
+    paddingBottom: 2,
     gap: 20,
     position: 'relative',
   },
   tab: {
-    paddingVertical: 0,
-    paddingHorizontal: 0,
     height: 20,
     justifyContent: 'center',
+    paddingHorizontal: 0,
   },
   label: {
     fontSize: 15,
     lineHeight: 20,
   },
-  underline: {
+  underlineSlot: {
     position: 'absolute',
-    bottom: 0,
+    // Designer: overlap text feet by 2.5
+    bottom: -2.5,
     left: 0,
     height: 5,
-    borderRadius: 999,
   },
 });
