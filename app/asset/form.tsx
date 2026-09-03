@@ -1,6 +1,7 @@
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useState, type ComponentProps } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -53,6 +54,7 @@ export default function AssetForm() {
   const [note, setNote] = useState(existing?.note ?? '');
   const [imageKey, setImageKey] = useState<ProductKey | undefined>(existing?.imageKey);
   const [imageUri, setImageUri] = useState<string | undefined>(existing?.imageUri);
+  const [lifting, setLifting] = useState(false);
 
   const save = () => {
     const purchasePrice = Number(price);
@@ -86,27 +88,37 @@ export default function AssetForm() {
     }
   };
 
-  const pickPhoto = () => {
+  const runPick = (fn: () => Promise<string | null>) => {
     showNativeSheet({
       title: '添加贴纸',
       items: [
         {
           label: '拍照',
           onPress: async () => {
-            const uri = await takeAssetPhoto();
-            if (uri) {
-              setImageUri(uri);
-              setImageKey(undefined);
+            setLifting(true);
+            try {
+              const uri = await takeAssetPhoto();
+              if (uri) {
+                setImageUri(uri);
+                setImageKey(undefined);
+              }
+            } finally {
+              setLifting(false);
             }
           },
         },
         {
           label: '从相册选择',
           onPress: async () => {
-            const uri = await pickAssetImage();
-            if (uri) {
-              setImageUri(uri);
-              setImageKey(undefined);
+            setLifting(true);
+            try {
+              const uri = await pickAssetImage();
+              if (uri) {
+                setImageUri(uri);
+                setImageKey(undefined);
+              }
+            } finally {
+              setLifting(false);
             }
           },
         },
@@ -121,26 +133,46 @@ export default function AssetForm() {
           title: existing ? '编辑资产' : '录入资产',
           headerRight: () => (
             <Pressable onPress={save} hitSlop={8}>
-              <Text style={[styles.saveText, { color: c.limeDark }]}>保存</Text>
+              <Text style={[styles.saveText, { color: c.tint }]}>保存</Text>
             </Pressable>
           ),
         }}
       />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
         <View style={styles.photoRow}>
-          <Pressable onPress={pickPhoto}>
-            <StickerImage imageKey={imageKey} imageUri={imageUri} size={96} />
+          <Pressable onPress={() => runPick(pickAssetImage)} disabled={lifting}>
+            <View>
+              <StickerImage imageKey={imageKey} imageUri={imageUri} size={96} />
+              {lifting ? (
+                <View style={styles.liftingMask}>
+                  <ActivityIndicator color={c.tint} />
+                </View>
+              ) : null}
+            </View>
           </Pressable>
-          <Pressable style={styles.photoBtn} onPress={pickPhoto}>
-            <Text style={styles.photoBtnText}>拍照或相册</Text>
+          <Pressable
+            style={[styles.photoBtn, { backgroundColor: c.chip }]}
+            onPress={() => runPick(pickAssetImage)}
+            disabled={lifting}>
+            <Text style={[styles.photoBtnText, { color: c.text }]}>
+              {lifting ? '正在抠图成贴纸…' : '拍照或相册'}
+            </Text>
           </Pressable>
         </View>
+        <Text style={[styles.hint, { color: c.textTertiary }]}>
+          真机 + 开发构建下会用 Vision 抠主体并加白边；Expo Go / 模拟器会回退原图。
+        </Text>
 
         <Text style={[styles.label, { color: c.textSecondary }]}>贴纸模板</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingVertical: 8 }}>
           {KEYS.map((k) => (
             <Pressable key={k} onPress={() => { setImageKey(k); setImageUri(undefined); }}>
-              <StickerImage imageKey={k} size={64} radius={14} style={imageKey === k ? { borderWidth: 2, borderColor: c.limeDark } : undefined} />
+              <StickerImage
+                imageKey={k}
+                size={64}
+                radius={14}
+                style={imageKey === k ? { borderWidth: 2, borderColor: c.tint, borderRadius: 16 } : undefined}
+              />
             </Pressable>
           ))}
         </ScrollView>
@@ -153,11 +185,14 @@ export default function AssetForm() {
 
         <Text style={[styles.label, { color: c.textSecondary }]}>分类</Text>
         <View style={styles.wrap}>
-          {CATEGORIES.filter((c) => c.id !== 'all').map((c) => {
-            const on = category === c.id;
+          {CATEGORIES.filter((cat) => cat.id !== 'all').map((cat) => {
+            const on = category === cat.id;
             return (
-              <Pressable key={c.id} onPress={() => setCategory(c.id as Exclude<CategoryId, 'all'>)} style={[styles.chip, on && styles.chipOn]}>
-                <Text style={[styles.chipText, on && styles.chipTextOn]}>{c.label}</Text>
+              <Pressable
+                key={cat.id}
+                onPress={() => setCategory(cat.id as Exclude<CategoryId, 'all'>)}
+                style={[styles.chip, { backgroundColor: c.chip }, on && { backgroundColor: c.chipSelectedBg }]}>
+                <Text style={[styles.chipText, { color: c.text }, on && { color: c.chipSelectedText }]}>{cat.label}</Text>
               </Pressable>
             );
           })}
@@ -193,9 +228,17 @@ function Field(props: ComponentProps<typeof TextInput> & { label: string }) {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   saveText: { fontWeight: '600', fontSize: 17 },
-  photoRow: { flexDirection: 'row', gap: 16, alignItems: 'center', marginBottom: 12 },
-  photoBtn: { backgroundColor: '#F4F4F4', borderRadius: 12, paddingVertical: 10, alignItems: 'center', flex: 1 },
+  photoRow: { flexDirection: 'row', gap: 16, alignItems: 'center', marginBottom: 8 },
+  photoBtn: { borderRadius: 12, paddingVertical: 10, alignItems: 'center', flex: 1 },
   photoBtnText: { fontWeight: '700' },
+  liftingMask: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderRadius: 16,
+  },
+  hint: { fontSize: 12, marginBottom: 12, lineHeight: 16 },
   label: { fontSize: 13, marginBottom: 8, fontWeight: '600' },
   input: {
     height: 48,
@@ -204,8 +247,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
-  chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: '#F4F4F4' },
-  chipOn: { backgroundColor: '#111' },
+  chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999 },
   chipText: { fontWeight: '700' },
-  chipTextOn: { color: '#fff' },
 });

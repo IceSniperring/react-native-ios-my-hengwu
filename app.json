@@ -9,6 +9,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
+      "deploymentTarget": "17.0",
       "infoPlist": {
         "NSCameraUsageDescription": "用于拍照录入资产贴纸",
         "NSPhotoLibraryUsageDescription": "用于从相册选择资产贴纸"
@@ -46,7 +47,8 @@
           "cameraPermission": "用于拍照录入资产"
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-glass-effect"
     ],
     "experiments": {
       "typedRoutes": true
