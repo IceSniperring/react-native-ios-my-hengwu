@@ -6,10 +6,8 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import Svg, { Path } from 'react-native-svg';
 
 import { useStore } from '../store';
-import { LIME } from '../theme';
 
 type Item = { id: string; label: string };
 type TabLayout = { x: number; width: number };
@@ -18,11 +16,14 @@ type Props = {
   items: Item[];
   selected: string;
   onSelect: (id: string) => void;
+  /** Optional for swipe-linked underline; prefer spring on tap when absent */
   pageOffset?: SharedValue<number>;
 };
 
-const SPRING = { damping: 18, stiffness: 220 };
+const SPRING = { damping: 20, stiffness: 280, mass: 0.6 };
 const UNSELECTED_LIGHT = 'rgba(60,60,67,0.55)';
+/** Semi-transparent highlighter over glyph feet */
+const HIGHLIGHTER = 'rgba(200, 240, 77, 0.8)';
 
 export function FilterTabs({ items, selected, onSelect, pageOffset }: Props) {
   const scheme = useStore((s) => s.colorScheme);
@@ -117,56 +118,59 @@ export function FilterTabs({ items, selected, onSelect, pageOffset }: Props) {
             </Pressable>
           );
         })}
-        {/* Sits up into the glyph feet (~3–4px overlap) */}
-        <Animated.View style={[styles.underlineSlot, underlineStyle]} pointerEvents="none">
-          <ComicUnderline />
+        {/* Paint AFTER labels so highlighter covers glyph feet */}
+        <Animated.View
+          style={[styles.underlineSlot, underlineStyle]}
+          pointerEvents="none"
+        >
+          <View style={styles.highlighter} />
         </Animated.View>
       </ScrollView>
     </View>
   );
 }
 
-function ComicUnderline() {
-  return (
-    <Svg width="100%" height={5} viewBox="0 0 100 5" preserveAspectRatio="none">
-      <Path
-        d="M1.5 3.2 C 16 0.6, 30 4.4, 48 2.4 S 76 0.5, 98.5 3.5"
-        stroke={LIME}
-        strokeWidth={5}
-        fill="none"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
 const styles = StyleSheet.create({
-  wrap: { position: 'relative' },
+  wrap: {
+    position: 'relative',
+    overflow: 'visible',
+    zIndex: 2,
+  },
   row: {
     flexGrow: 0,
     alignItems: 'flex-end',
     paddingHorizontal: 16,
     paddingTop: 4,
-    // underline overlaps text: only 2px below the 20px line box
     paddingBottom: 2,
     gap: 20,
     position: 'relative',
+    overflow: 'visible',
   },
   tab: {
     height: 20,
     justifyContent: 'center',
     paddingHorizontal: 0,
+    zIndex: 1,
   },
   label: {
     fontSize: 15,
     lineHeight: 20,
+    // text sits under highlighter
+    zIndex: 1,
   },
   underlineSlot: {
     position: 'absolute',
-    // Designer: overlap text feet by 2.5
+    // Overlap glyph feet ~2.5px; sibling order + zIndex keep bar above text
     bottom: -2.5,
     left: 0,
     height: 5,
+    zIndex: 10,
+    elevation: 10,
+  },
+  highlighter: {
+    flex: 1,
+    height: 5,
+    borderRadius: 2,
+    backgroundColor: HIGHLIGHTER,
   },
 });
