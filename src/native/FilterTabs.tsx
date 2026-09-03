@@ -6,32 +6,32 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import Svg, { Path } from 'react-native-svg';
 
+import { useStore } from '../store';
 import { LIME } from '../theme';
 import { useColors } from '../useColors';
 
 type Item = { id: string; label: string };
-
 type TabLayout = { x: number; width: number };
 
 type Props = {
   items: Item[];
   selected: string;
   onSelect: (id: string) => void;
-  /** Fractional page index while swiping (position + offset) */
+  /** Fractional page index (position + offset) while paging */
   pageOffset?: SharedValue<number>;
 };
 
 const SPRING = { damping: 18, stiffness: 220 };
+const UNSELECTED_LIGHT = 'rgba(60,60,67,0.55)';
 
 export function FilterTabs({ items, selected, onSelect, pageOffset }: Props) {
   const c = useColors();
+  const scheme = useStore((s) => s.colorScheme);
   const [layouts, setLayouts] = useState<Record<string, TabLayout>>({});
   const scrollRef = useRef<ScrollView>(null);
   const underlineX = useSharedValue(0);
   const underlineW = useSharedValue(24);
-  // Parallel arrays for worklet interpolation while paging
   const xs = useSharedValue<number[]>([]);
   const ws = useSharedValue<number[]>([]);
 
@@ -45,8 +45,9 @@ export function FilterTabs({ items, selected, onSelect, pageOffset }: Props) {
         ws.value = [];
         return;
       }
-      const strokeW = Math.max(18, L.width * 0.92);
-      nextX.push(L.x + (L.width - strokeW) / 2);
+      // width = text width + 2px each side
+      const strokeW = L.width + 4;
+      nextX.push(L.x - 2);
       nextW.push(strokeW);
     }
     xs.value = nextX;
@@ -56,11 +57,11 @@ export function FilterTabs({ items, selected, onSelect, pageOffset }: Props) {
   useEffect(() => {
     const layout = layouts[selected];
     if (!layout) return;
-    const w = Math.max(18, layout.width * 0.92);
-    const x = layout.x + (layout.width - w) / 2;
+    const w = layout.width + 4;
+    const x = layout.x - 2;
     underlineX.value = withSpring(x, SPRING);
     underlineW.value = withSpring(w, SPRING);
-    scrollRef.current?.scrollTo({ x: Math.max(0, layout.x - 40), animated: true });
+    scrollRef.current?.scrollTo({ x: Math.max(0, layout.x - 48), animated: true });
   }, [selected, layouts, underlineX, underlineW]);
 
   const underlineStyle = useAnimatedStyle(() => {
@@ -99,6 +100,13 @@ export function FilterTabs({ items, selected, onSelect, pageOffset }: Props) {
         contentContainerStyle={styles.row}>
         {items.map((item) => {
           const on = item.id === selected;
+          const color = on
+            ? scheme === 'dark'
+              ? '#FFFFFF'
+              : '#111111'
+            : scheme === 'dark'
+              ? '#8E8E93'
+              : UNSELECTED_LIGHT;
           return (
             <Pressable
               key={item.id}
@@ -106,39 +114,18 @@ export function FilterTabs({ items, selected, onSelect, pageOffset }: Props) {
               onLayout={onTabLayout(item.id)}
               style={styles.tab}
               hitSlop={6}>
-              <Text
-                style={[
-                  styles.label,
-                  {
-                    color: on ? c.text : c.textSecondary,
-                    fontWeight: on ? '700' : '500',
-                  },
-                ]}>
+              <Text style={[styles.label, { color, fontWeight: on ? '700' : '400' }]}>
                 {item.label}
               </Text>
             </Pressable>
           );
         })}
-        <Animated.View style={[styles.underlineSlot, underlineStyle]} pointerEvents="none">
-          <ComicUnderline />
-        </Animated.View>
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.underline, { backgroundColor: LIME }, underlineStyle]}
+        />
       </ScrollView>
     </View>
-  );
-}
-
-function ComicUnderline() {
-  return (
-    <Svg width="100%" height={7} viewBox="0 0 100 7" preserveAspectRatio="none">
-      <Path
-        d="M2 4.2 C 18 1.2, 32 5.8, 48 3.4 S 78 1.6, 98 4.5"
-        stroke={LIME}
-        strokeWidth={4.2}
-        fill="none"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
   );
 }
 
@@ -148,20 +135,27 @@ const styles = StyleSheet.create({
     flexGrow: 0,
     alignItems: 'flex-end',
     paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 12,
-    gap: 18,
+    paddingTop: 4,
+    // label lineHeight 20 + gap 6 to underline + underline 5
+    paddingBottom: 6 + 5,
+    gap: 20,
     position: 'relative',
   },
   tab: {
-    paddingVertical: 4,
-    paddingHorizontal: 2,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+    height: 20,
+    justifyContent: 'center',
   },
-  label: { fontSize: 15 },
-  underlineSlot: {
+  label: {
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  underline: {
     position: 'absolute',
-    bottom: 4,
+    bottom: 0,
     left: 0,
-    height: 7,
+    height: 5,
+    borderRadius: 999,
   },
 });
