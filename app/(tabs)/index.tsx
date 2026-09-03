@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -9,11 +9,14 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Extrapolation,
   interpolate,
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -23,8 +26,14 @@ import { OverviewCard } from '../../src/components/OverviewCard';
 import { useFilteredAssets, useOverview } from '../../src/hooks';
 import { FilterTabs } from '../../src/native/FilterTabs';
 import { NativeSegmented } from '../../src/native/NativeSegmented';
+import { useStore } from '../../src/store';
 import { useColors } from '../../src/useColors';
-import { CATEGORIES, STATUS_FILTERS, type AssetStatus, type CategoryId } from '../../src/types';
+import {
+  CATEGORIES,
+  STATUS_FILTERS,
+  type AssetStatus,
+  type CategoryId,
+} from '../../src/types';
 
 const COLLAPSE = 72;
 
@@ -32,6 +41,7 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const c = useColors();
   const { width } = useWindowDimensions();
+  const assets = useStore((s) => s.assets);
   const [category, setCategory] = useState<CategoryId>('all');
   const [status, setStatus] = useState<AssetStatus | 'all'>('all');
   const overview = useOverview();
@@ -44,6 +54,29 @@ export default function HomeScreen() {
     STATUS_FILTERS.findIndex((s) => s.id === status),
   );
   const scrollY = useSharedValue(0);
+  const pageOffset = useSharedValue(0);
+
+  const visibleCategories = useMemo(() => {
+    return CATEGORIES.filter(
+      (cat) => cat.id === 'all' || assets.some((a) => a.category === cat.id),
+    );
+  }, [assets]);
+
+  useEffect(() => {
+    if (!visibleCategories.some((cat) => cat.id === category)) {
+      setCategory('all');
+      pageOffset.value = withTiming(0, { duration: 200 });
+    }
+  }, [visibleCategories, category, pageOffset]);
+
+  const categoryIndex = Math.max(
+    0,
+    visibleCategories.findIndex((cat) => cat.id === category),
+  );
+
+  useEffect(() => {
+    pageOffset.value = withTiming(categoryIndex, { duration: 220 });
+  }, [categoryIndex, pageOffset]);
 
   const rows = useMemo(() => {
     const r: (typeof list)[] = [];
@@ -55,7 +88,6 @@ export default function HomeScreen() {
     scrollY.value = e.nativeEvent.contentOffset.y;
   };
 
-  // Large title in the scrolling header fades / drifts as you scroll.
   const largeTitleStyle = useAnimatedStyle(() => {
     const progress = interpolate(scrollY.value, [0, COLLAPSE], [0, 1], Extrapolation.CLAMP);
     const travel = (width - pad * 2) / 2 - 40;
@@ -68,18 +100,34 @@ export default function HomeScreen() {
     };
   });
 
-  // Compact title lives in the FIXED top bar (above ScrollView), so sticky
-  // category tabs always sit *below*「有数」— never climb over it.
   const compactTitleStyle = useAnimatedStyle(() => {
     const progress = interpolate(scrollY.value, [COLLAPSE * 0.45, COLLAPSE], [0, 1], Extrapolation.CLAMP);
-    return {
-      opacity: progress,
-    };
+    return { opacity: progress };
   });
+
+  const selectCategory = (id: CategoryId) => {
+    setCategory(id);
+  };
+
+  const shiftCategory = (delta: number) => {
+    const next = Math.min(
+      visibleCategories.length - 1,
+      Math.max(0, categoryIndex + delta),
+    );
+    const id = visibleCategories[next]?.id;
+    if (id) setCategory(id);
+  };
+
+  const pan = Gesture.Pan()
+    .activeOffsetX([-28, 28])
+    .failOffsetY([-20, 20])
+    .onEnd((e) => {
+      if (e.translationX < -56) runOnJS(shiftCategory)(1);
+      else if (e.translationX > 56) runOnJS(shiftCategory)(-1);
+    });
 
   return (
     <View collapsable={false} style={[styles.root, { backgroundColor: c.bg }]}>
-      {/* Fixed chrome: title + search/calendar — always above sticky filters */}
       <View style={[styles.topChrome, { paddingTop: insets.top, backgroundColor: c.bg }]}>
         <View style={styles.topRow}>
           <Animated.Text style={[styles.compactTitle, { color: c.text }, compactTitleStyle]}>
@@ -111,7 +159,6 @@ export default function HomeScreen() {
         }}
         showsVerticalScrollIndicator={false}
         bounces>
-        {/* 0 — large title + overview (scrolls away) */}
         <View style={styles.header} collapsable={false}>
           <Animated.Text style={[styles.brand, { color: c.text }, largeTitleStyle]}>有数</Animated.Text>
           <View style={{ paddingTop: 12 }}>
@@ -125,14 +172,14 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* 1 — sticky: 分类 → 状态（永远在固定标题栏下方） */}
         <View
           collapsable={false}
           style={[styles.sticky, { backgroundColor: c.bg, borderBottomColor: c.line }]}>
           <FilterTabs
-            items={CATEGORIES}
+            items={visibleCategories}
             selected={category}
-            onSelect={(id) => setCategory(id as CategoryId)}
+            onSelect={(id) => selectCategory(id as CategoryId)}
+            pageOffset={pageOffset}
           />
           <NativeSegmented
             values={STATUS_FILTERS.map((s) => s.label)}
@@ -141,26 +188,32 @@ export default function HomeScreen() {
           />
         </View>
 
-        {/* 2 — asset grid */}
-        <View style={{ paddingHorizontal: pad, paddingTop: 8, backgroundColor: c.bg }}>
-          {list.length === 0 ? (
-            <View style={styles.empty}>
-              <Text style={[styles.emptyTitle, { color: c.text }]}>还没有这类资产</Text>
-              <Text style={[styles.emptySub, { color: c.textSecondary }]}>点底部加号，把物品变成资产</Text>
-            </View>
-          ) : (
-            rows.map((row, i) => (
-              <View key={i} style={{ flexDirection: 'row', gap }}>
-                {row.map((a) => (
-                  <View key={a.id} style={{ width: cardW }}>
-                    <AssetCard asset={a} onPress={() => router.push(`/asset/${a.id}`)} />
-                  </View>
-                ))}
-                {row.length === 1 ? <View style={{ width: cardW }} /> : null}
+        <GestureDetector gesture={pan}>
+          <View style={{ paddingHorizontal: pad, paddingTop: 10 }}>
+            {list.length === 0 ? (
+              <View style={styles.empty}>
+                <Text style={[styles.emptyTitle, { color: c.text }]}>还没有这类资产</Text>
+                <Text style={[styles.emptySub, { color: c.textSecondary }]}>
+                  点底部加号，把物品变成资产
+                </Text>
               </View>
-            ))
-          )}
-        </View>
+            ) : (
+              rows.map((row, i) => (
+                <View key={i} style={{ flexDirection: 'row', gap, marginBottom: gap }}>
+                  {row.map((a) => (
+                    <AssetCard
+                      key={a.id}
+                      asset={a}
+                      size={cardW}
+                      onPress={() => router.push(`/asset/${a.id}`)}
+                    />
+                  ))}
+                  {row.length === 1 ? <View style={{ width: cardW }} /> : null}
+                </View>
+              ))
+            )}
+          </View>
+        </GestureDetector>
       </ScrollView>
     </View>
   );

@@ -1,76 +1,84 @@
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import {
-  dailyCost,
-  formatDaily,
-  formatMoney,
-  holdingDays,
-  remainingDays,
-  statusColor,
-  targetProgress,
-} from '../calc';
+import { dailyCost, formatMoney, holdingDays, statusColor } from '../calc';
 import { PRODUCT_IMAGES } from '../images';
-import { radius, shadow } from '../theme';
 import type { Asset } from '../types';
 import { STATUS_LABEL } from '../types';
 import { useStore } from '../store';
 import { useColors } from '../useColors';
-import { CostBar } from './CostBar';
 
 type Props = {
   asset: Asset;
   onPress: () => void;
+  /** Square edge length; defaults to stretch parent width */
+  size?: number;
 };
 
-export function AssetCard({ asset, onPress }: Props) {
+/**
+ * Near-square asset tile:
+ * top-left sticker thumb, top-right status, name, price|days, big ¥/天.
+ */
+export function AssetCard({ asset, onPress, size }: Props) {
   const c = useColors();
   const scheme = useStore((s) => s.colorScheme);
   const days = holdingDays(asset);
-  const remain = remainingDays(asset);
   const source = asset.imageUri
     ? { uri: asset.imageUri }
     : asset.imageKey
       ? PRODUCT_IMAGES[asset.imageKey]
       : undefined;
+  const edge = size ?? 160;
+  const thumb = Math.round(edge * 0.36);
 
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
-        scheme === 'light' && shadow.card,
-        { backgroundColor: c.card },
-        pressed && { opacity: 0.88, transform: [{ scale: 0.985 }] },
+        size
+          ? { width: size, height: size }
+          : { width: '100%', aspectRatio: 1 },
+        {
+          backgroundColor: c.card,
+          borderColor: scheme === 'dark' ? '#2A2A2C' : c.line,
+        },
+        pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] },
       ]}>
-      <View style={[styles.imageBox, { backgroundColor: c.imageBg }]}>
-        {source ? (
-          <Image source={source} style={styles.image} contentFit="contain" />
-        ) : (
-          <View style={[styles.image, { backgroundColor: c.chip }]} />
-        )}
+      <View style={styles.topRow}>
+        <View
+          style={[
+            styles.thumb,
+            {
+              width: thumb,
+              height: thumb,
+              backgroundColor: '#FFFFFF',
+            },
+          ]}>
+          {source ? (
+            <Image source={source} style={styles.thumbImg} contentFit="contain" />
+          ) : (
+            <View style={[styles.thumbImg, { backgroundColor: c.chip }]} />
+          )}
+        </View>
         <View style={[styles.badge, { backgroundColor: c.badgeBg }]}>
           <View style={[styles.dot, { backgroundColor: statusColor(asset.status) }]} />
           <Text style={[styles.badgeText, { color: c.text }]}>{STATUS_LABEL[asset.status]}</Text>
         </View>
       </View>
-      <View style={styles.body}>
-        <Text style={[styles.name, { color: c.text }]} numberOfLines={1}>
-          {asset.starred ? '★ ' : ''}
-          {asset.name}
+
+      <Text style={[styles.name, { color: c.text }]} numberOfLines={2}>
+        {asset.starred ? '★ ' : ''}
+        {asset.name}
+      </Text>
+      <Text style={[styles.meta, { color: c.textSecondary }]} numberOfLines={1}>
+        {formatMoney(asset.purchasePrice, 2)} | {days}天
+      </Text>
+
+      <View style={styles.footer}>
+        <Text style={[styles.daily, { color: c.text }]} numberOfLines={1}>
+          {formatMoney(dailyCost(asset), Math.abs(dailyCost(asset)) >= 10 ? 2 : 2)}/天
         </Text>
-        <Text style={[styles.meta, { color: c.textSecondary }]}>
-          {formatMoney(asset.purchasePrice, 0)} · {days}天
-        </Text>
-        <Text style={[styles.daily, { color: c.text }]}>{formatDaily(dailyCost(asset))}</Text>
-        <View style={{ marginTop: 8 }}>
-          <CostBar
-            progress={targetProgress(asset)}
-            color={statusColor(asset.status)}
-            height={4}
-            label={asset.status === 'active' ? `还剩 ${remain} 天` : STATUS_LABEL[asset.status]}
-          />
-        </View>
       </View>
     </Pressable>
   );
@@ -78,28 +86,37 @@ export function AssetCard({ asset, onPress }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    flex: 1,
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 12,
+    borderRadius: 18,
+    padding: 12,
+    marginBottom: 0,
+    borderWidth: StyleSheet.hairlineWidth,
+    justifyContent: 'flex-start',
   },
-  imageBox: { height: 118 },
-  image: { width: '100%', height: '100%' },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  thumb: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  thumbImg: { width: '100%', height: '100%' },
   badge: {
-    position: 'absolute',
-    right: 8,
-    top: 8,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 4,
     borderRadius: 999,
     gap: 4,
+    maxWidth: '52%',
   },
   dot: { width: 6, height: 6, borderRadius: 3 },
   badgeText: { fontSize: 10, fontWeight: '600' },
-  body: { paddingHorizontal: 12, paddingTop: 10, paddingBottom: 12 },
-  name: { fontSize: 14, fontWeight: '700' },
+  name: { marginTop: 10, fontSize: 14, fontWeight: '700', lineHeight: 18 },
   meta: { marginTop: 4, fontSize: 11 },
-  daily: { marginTop: 6, fontSize: 18, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  footer: { flex: 1, justifyContent: 'flex-end' },
+  daily: { fontSize: 20, fontWeight: '800', fontVariant: ['tabular-nums'] },
 });
