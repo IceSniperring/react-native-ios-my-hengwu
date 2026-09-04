@@ -3,6 +3,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo } from 'react';
 import { Platform, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useStore } from '../src/store';
 import { useColors } from '../src/useColors';
@@ -60,9 +61,10 @@ export default function RootLayout() {
   };
 
   return (
-    <ThemeProvider value={navTheme}>
-      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: c.bg }}>
+      <ThemeProvider value={navTheme}>
+        <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="asset/[id]" options={{ ...nativeHeader, title: '资产详情' }} />
         <Stack.Screen
@@ -87,7 +89,8 @@ export default function RootLayout() {
         />
         <Stack.Screen name="savings" options={{ ...nativeHeader, title: '智能攒钱' }} />
         <Stack.Screen name="calendar" options={{ ...nativeHeader, title: '购入日历' }} />
-      </Stack>
-    </ThemeProvider>
+        </Stack>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }

@@ -1,88 +1,38 @@
 import { router } from 'expo-router';
-import { memo, useLayoutEffect, useMemo } from 'react';
-import {
-  Animated,
-  StyleSheet,
-  Text,
-  View,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
-} from 'react-native';
+import { memo } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { Tabs } from 'react-native-collapsible-tab';
 
 import { AssetCard } from '../components/AssetCard';
 import { useColors } from '../useColors';
 import type { Asset } from '../types';
 
-type Anchor = { ca: number; da: number };
-
-// ── One memo'd page per category ──────────────────────────────────────────
 export const CategoryPage = memo(function CategoryPage({
-  id,
   rows,
-  anchor,
-  heroH,
-  tabsH,
-  frameH,
-  pageValue,
-  onY,
-  onMount,
   cardW,
   gap,
   pad,
   bottomPad,
 }: {
-  id: string;
   rows: Asset[][];
-  anchor: Anchor;
-  heroH: number;
-  tabsH: number;
-  frameH: number;
-  pageValue: Animated.Value;
-  onY: (id: string, y: number) => void;
-  onMount: (id: string) => void;
   cardW: number;
   gap: number;
   pad: number;
   bottomPad: number;
 }) {
   const c = useColors();
-  const { ca, da } = anchor; // frozen during vertical scrolling
-  // Layout-correct glue: paddingTop shrinks as da rises so the first row
-  // sits under the sticky tabs without a transform that desyncs scroll size.
-  const glueTop = Math.max(0, heroH + tabsH - da);
-
-  // Birth anchor: a freshly (re)mounted page starts pristine (y = 0) glued
-  // to the current chrome state.
-  useLayoutEffect(() => {
-    onMount(id);
-  }, [id, onMount]);
-
-  const onScroll = useMemo(
-    () =>
-      Animated.event([{ nativeEvent: { contentOffset: { y: pageValue } } }], {
-        useNativeDriver: true,
-        listener: (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-          onY(id, e.nativeEvent.contentOffset.y);
-        },
-      }),
-    [id, pageValue, onY],
-  );
 
   return (
-    <Animated.ScrollView
-      // The chrome zone above the list is a hard boundary: no rubber-banding
-      // may pull content or background into the region under the tabs.
-      bounces={false}
+    <Tabs.ScrollView
+      style={styles.fill}
+      bounces
+      alwaysBounceVertical
+      directionalLockEnabled
+      nestedScrollEnabled
+      automaticallyAdjustContentInsets={false}
       contentInsetAdjustmentBehavior="never"
-      contentContainerStyle={{
-        // maxScroll = heroH - ca — exactly the travel needed to (un)collapse
-        // from the anchored state; short pages stop right at the pin.
-        minHeight: frameH > 0 && heroH > 0 ? frameH + heroH - ca : undefined,
-        paddingTop: glueTop,
-        paddingBottom: bottomPad,
-      }}
-      onScroll={onScroll}
-      scrollEventThrottle={16}
+      scrollIndicatorInsets={{ bottom: bottomPad }}
+      contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}>
       {rows.length === 0 ? (
         <View style={styles.empty}>
@@ -114,11 +64,17 @@ export const CategoryPage = memo(function CategoryPage({
           ))}
         </View>
       )}
-    </Animated.ScrollView>
+      {/* Clears the floating tab bar for long lists. Short lists still only
+          scroll far enough to collapse the overview — extra space is empty,
+          not extra offset, so the last card cannot be pushed under the tabs. */}
+      <View style={{ height: bottomPad }} />
+    </Tabs.ScrollView>
   );
 });
 
 const styles = StyleSheet.create({
+  fill: { flex: 1 },
+  content: { flexGrow: 1 },
   empty: { paddingVertical: 48, alignItems: 'center' },
   emptyTitle: { fontSize: 16, fontWeight: '700' },
   emptySub: { marginTop: 6, fontSize: 13 },

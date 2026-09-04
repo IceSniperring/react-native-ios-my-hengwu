@@ -31,9 +31,4 @@ export const styles = StyleSheet.create({
   brand: { fontSize: 34, fontWeight: '800', letterSpacing: 0.5 },
   body: { flex: 1, overflow: 'hidden' },
   pagerFrame: { flex: 1, overflow: 'hidden' },
-  chrome: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 },
-  stickyBlock: { paddingBottom: 4 },
-  empty: { paddingVertical: 48, alignItems: 'center' },
-  emptyTitle: { fontSize: 16, fontWeight: '700' },
-  emptySub: { marginTop: 6, fontSize: 13 },
 });
