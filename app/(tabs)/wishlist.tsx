@@ -58,7 +58,7 @@ export default function WishlistScreen() {
           <SymbolView name="plus" size={18} tintColor="#FFFFFF" />
         </Pressable>
       </View>
-      <Text style={[styles.sub, { color: c.textSecondary }]}>先攒够再买，买得贵也要心中有数</Text>
+      <Text style={[styles.sub, { color: c.textSecondary }]}>先攒够再买，每件东西心里有杆秤</Text>
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
         {wishes.map((w) => {
           const p = Math.min(1, w.saved / w.targetPrice);

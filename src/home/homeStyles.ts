@@ -31,4 +31,5 @@ export const styles = StyleSheet.create({
   brand: { fontSize: 34, fontWeight: '800', letterSpacing: 0.5 },
   body: { flex: 1, overflow: 'hidden' },
   pagerFrame: { flex: 1, overflow: 'hidden' },
+  headerOverflow: { overflow: 'visible' },
 });

@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "有数",
-    "slug": "youshu",
+    "name": "衡物",
+    "slug": "hengwu",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "youshu",
+    "scheme": "hengwu",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
@@ -14,7 +14,7 @@
         "NSCameraUsageDescription": "用于拍照录入资产贴纸",
         "NSPhotoLibraryUsageDescription": "用于从相册选择资产贴纸"
       },
-      "bundleIdentifier": "com.icesniper.youshu"
+      "bundleIdentifier": "com.icesniper.hengwu"
     },
     "android": {
       "adaptiveIcon": {

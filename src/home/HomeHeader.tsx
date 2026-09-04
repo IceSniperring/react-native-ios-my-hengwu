@@ -41,7 +41,7 @@ export function HomeHeader({
   return (
     <View style={{ paddingHorizontal: 16, paddingTop: 4, backgroundColor: c.bg }}>
       <CollapseBridge target={collapseProgress} />
-      <Text style={[styles.brand, { color: c.text }]}>有数</Text>
+      <Text style={[styles.brand, { color: c.text }]}>衡物</Text>
       <View style={{ paddingTop: 12 }}>
         <OverviewCard
           total={overview.total}

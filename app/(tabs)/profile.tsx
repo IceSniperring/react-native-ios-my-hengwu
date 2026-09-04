@@ -29,10 +29,10 @@ export default function ProfileScreen() {
       <Text style={[styles.title, { color: c.text }]}>我的</Text>
       <View style={styles.hero}>
         <View style={[styles.avatar, { backgroundColor: c.tint }]}>
-          <Text style={{ fontSize: 28, fontWeight: '800', color: '#FFFFFF' }}>有</Text>
+          <Text style={{ fontSize: 28, fontWeight: '800', color: '#FFFFFF' }}>衡</Text>
         </View>
         <View>
-          <Text style={[styles.name, { color: c.text }]}>有数 · 本地账本</Text>
+          <Text style={[styles.name, { color: c.text }]}>衡物 · 本地账本</Text>
           <Text style={[styles.meta, { color: c.textSecondary }]}>数据只存在这台手机</Text>
         </View>
       </View>
@@ -87,7 +87,7 @@ export default function ProfileScreen() {
       />
 
       <Text style={[styles.foot, { color: c.textTertiary }]}>
-        有数 · 像素级复刻学习版{'\n'}买入 · 服役 · 退役 · 卖出，让每一件物品心中有数
+        衡物 · 本地资产账本{'\n'}买入 · 服役 · 退役 · 卖出，把每件物品放上秤
       </Text>
     </ScrollView>
   );

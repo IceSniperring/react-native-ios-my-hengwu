@@ -101,7 +101,7 @@ export const useStore = create<State>()(
       clearAll: () => set({ assets: [], wishes: [], plans: [] }),
     }),
     {
-      name: 'youshu-db',
+      name: 'hengwu-db',
       storage: createJSONStorage(() => safeStorage),
       partialize: (s) => ({
         assets: s.assets,

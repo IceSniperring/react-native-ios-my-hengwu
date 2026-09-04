@@ -100,7 +100,7 @@ export default function HomeScreen() {
         <View style={styles.topRow}>
           <Pressable hitSlop={12} onPress={expandHeader} style={styles.titlePress}>
             <Animated.Text style={[styles.compactTitle, { color: c.text }, compactTitleStyle]}>
-              有数
+              衡物
             </Animated.Text>
           </Pressable>
           <View style={styles.topActions}>
@@ -124,6 +124,7 @@ export default function HomeScreen() {
         renderTabBar={renderTabBar}
         minHeaderHeight={0}
         headerBackgroundColor={c.bg}
+        headerContainerStyle={styles.headerOverflow}
         containerStyle={styles.body}
         initialTabName="all"
         pagerProps={{ offscreenPageLimit: Math.max(1, cats.length - 1) }}>
