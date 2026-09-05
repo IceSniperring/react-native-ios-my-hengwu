@@ -54,7 +54,7 @@ export function StickerImage({ imageKey, imageUri, size = 88, style, radius = 16
           <Image
             source={source}
             style={styles.img}
-            contentFit="contain"
+            contentFit="cover"
             recyclingKey={imageUri ?? imageKey}
           />
         ) : (

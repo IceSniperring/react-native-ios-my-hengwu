@@ -46,7 +46,7 @@ export function AssetCard({ asset, onPress, size }: Props) {
       <View style={styles.topRow}>
         <View style={styles.thumb}>
           {source ? (
-            <Image source={source} style={styles.thumbImg} contentFit="contain" />
+            <Image source={source} style={styles.thumbImg} contentFit="cover" />
           ) : (
             <View style={[styles.thumbImg, { backgroundColor: c.chip }]} />
           )}
