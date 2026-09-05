@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
+import { PlatformIcon } from '../src/native/PlatformIcon';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -36,13 +36,13 @@ export default function CalendarScreen() {
     <View style={[styles.root, { backgroundColor: c.bg }]}>
       <View style={styles.monthRow}>
         <Pressable onPress={() => shift(-1)} style={styles.iconBtn}>
-          <SymbolView name="chevron.left" size={18} tintColor={c.text} />
+          <PlatformIcon name="chevron.left" size={20} color={c.text} />
         </Pressable>
         <Text style={[styles.month, { color: c.text }]}>
           {y}年{m + 1}月
         </Text>
         <Pressable onPress={() => shift(1)} style={styles.iconBtn}>
-          <SymbolView name="chevron.right" size={18} tintColor={c.text} />
+          <PlatformIcon name="chevron.right" size={20} color={c.text} />
         </Pressable>
       </View>
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ padding: 16 }}>

@@ -28,7 +28,8 @@ export function LargeTitleScreen({ title, subtitle, accessory, header, overlay, 
   const c = useColors();
   const y = useSharedValue(0);
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
-  const bottomPad = Platform.OS === 'ios' ? insets.bottom + 120 : 32;
+  const android = Platform.OS === 'android';
+  const bottomPad = Platform.OS === 'ios' ? insets.bottom + 120 : 96;
 
   const onScroll = useAnimatedScrollHandler({
     onScroll: (e) => {
@@ -51,8 +52,10 @@ export function LargeTitleScreen({ title, subtitle, accessory, header, overlay, 
           <Pressable
             hitSlop={12}
             onPress={() => scrollTo(scrollRef, 0, 0, true)}
-            style={styles.compactHit}>
-            <Animated.Text style={[styles.compact, { color: c.text }, compactStyle]} numberOfLines={1}>
+            style={[styles.compactHit, android && styles.compactHitMd]}>
+            <Animated.Text
+              style={[styles.compact, android && styles.compactMd, { color: c.text }, compactStyle]}
+              numberOfLines={1}>
               {title}
             </Animated.Text>
           </Pressable>
@@ -72,7 +75,7 @@ export function LargeTitleScreen({ title, subtitle, accessory, header, overlay, 
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: bottomPad }}>
         <View style={styles.largeBlock}>
-          <Text style={[styles.large, { color: c.text }]}>{title}</Text>
+          <Text style={[styles.large, android && styles.largeMd, { color: c.text }]}>{title}</Text>
           {subtitle ? <Text style={[styles.subtitle, { color: c.textSecondary }]}>{subtitle}</Text> : null}
         </View>
         {header ? (
@@ -105,9 +108,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  compactHitMd: {
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    paddingLeft: 4,
+  },
   compact: {
     fontSize: 17,
     fontWeight: '700',
+  },
+  compactMd: {
+    fontSize: 22,
+    fontWeight: '500',
+  },
+  largeMd: {
+    fontSize: 28,
+    fontWeight: '400',
+    letterSpacing: 0,
   },
   accessory: {
     zIndex: 1,

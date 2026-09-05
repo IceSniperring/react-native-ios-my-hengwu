@@ -1,7 +1,7 @@
-import { SymbolView } from 'expo-symbols';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { PlatformIcon } from '../native/PlatformIcon';
 import { LIME } from '../theme';
 import { useColors } from '../useColors';
 
@@ -25,7 +25,7 @@ export function TagChip({ label, selected, onPress, onRemove }: Props) {
           hitSlop={8}
           accessibilityLabel={`删除 ${label}`}
           style={styles.remove}>
-          <SymbolView name="xmark" size={9} tintColor={selected ? '#1C1C1E' : c.textSecondary} />
+          <PlatformIcon name="xmark" size={12} color={selected ? '#1C1C1E' : c.textSecondary} />
         </Pressable>
       ) : null}
     </>
@@ -56,7 +56,7 @@ export function TagChipAdd({ onPress }: { onPress: () => void }) {
         styles.add,
         { borderColor: c.line, opacity: pressed ? 0.7 : 1 },
       ]}>
-      <SymbolView name="plus" size={11} tintColor={c.text} />
+      <PlatformIcon name="plus" size={14} color={c.text} />
       <Text style={[styles.text, { color: c.text }]}>新建标签</Text>
     </Pressable>
   );

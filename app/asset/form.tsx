@@ -1,6 +1,6 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
-import { SymbolView, type SFSymbol } from 'expo-symbols';
+import type { SFSymbol } from 'expo-symbols';
 import { useEffect, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
@@ -27,6 +27,7 @@ import { parseISO, toISO, todayISO } from '../../src/calc';
 import { GlassIconButton } from '../../src/components/GlassIconButton';
 import { StickerImage } from '../../src/components/StickerImage';
 import { NativeMenu } from '../../src/native/NativeMenu';
+import { PlatformIcon } from '../../src/native/PlatformIcon';
 import { NativeSegmented } from '../../src/native/NativeSegmented';
 import { NativeSheet } from '../../src/native/NativeSheet';
 import { pickAssetImage, takeAssetPhoto } from '../../src/pickImage';
@@ -207,7 +208,7 @@ export default function AssetForm() {
               if (!lifting) void pickFromMenu(id);
             }}>
             <View style={[styles.changeIconBtn, { backgroundColor: c.chip }]}>
-              <SymbolView name="arrow.triangle.2.circlepath" size={13} tintColor={c.textSecondary} />
+              <PlatformIcon name="arrow.triangle.2.circlepath" size={13} color={c.textSecondary} />
               <Text style={[styles.changeIconText, { color: c.textSecondary }]}>
                 {lifting ? '正在抠图…' : '更换图标'}
               </Text>
@@ -293,10 +294,10 @@ export default function AssetForm() {
 
             <View style={[styles.card, { backgroundColor: cardBg }]}>
               <View style={styles.targetHead}>
-                <SymbolView name="scope" size={16} tintColor={c.textSecondary} />
+                <PlatformIcon name="scope" size={16} color={c.textSecondary} />
                 <Text style={[styles.fieldLabel, { color: c.text }]}>目标日均</Text>
                 <View style={[styles.limeDot, { backgroundColor: LIME }]}>
-                  <SymbolView name="checkmark" size={9} tintColor="#111111" />
+                  <PlatformIcon name="checkmark" size={11} color="#111111" />
                 </View>
               </View>
               <NativeSegmented
@@ -379,10 +380,10 @@ function FieldRow({
         styles.fieldRow,
         !last && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.line },
       ]}>
-      <SymbolView name={icon} size={16} tintColor={c.textSecondary} />
+      <PlatformIcon name={icon} size={16} color={c.textSecondary} />
       <Text style={[styles.fieldLabel, { color: c.text }]}>{label}</Text>
       <View style={styles.fieldValue}>{children}</View>
-      {chevron ? <SymbolView name="chevron.right" size={12} tintColor={c.textTertiary} /> : null}
+      {chevron ? <PlatformIcon name="chevron.right" size={16} color={c.textTertiary} /> : null}
     </View>
   );
 }

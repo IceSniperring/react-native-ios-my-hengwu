@@ -15,6 +15,7 @@ import {
 } from 'react-native-collapsible-tab';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AddFab } from '../../src/components/AddFab';
 import { GlassIconButton } from '../../src/components/GlassIconButton';
 import { filterAssets, useOverview } from '../../src/hooks';
 import { CategoryPage } from '../../src/home/CategoryPage';
@@ -46,7 +47,7 @@ export default function HomeScreen() {
   const cardW = (width - pad * 2 - gap) / 2;
   // iOS 26 floating tab bar + trailing add button overlay the screen.
   // Safe-area bottom is only the home indicator (~34); the pill is ~120pt.
-  const bottomPad = Platform.OS === 'ios' ? insets.bottom + 120 : 32;
+  const bottomPad = Platform.OS === 'ios' ? insets.bottom + 120 : 96;
   const statusIndex = Math.max(0, STATUS_FILTERS.findIndex((s) => s.id === status));
 
   const cats = useMemo(() => {
@@ -140,6 +141,7 @@ export default function HomeScreen() {
           </Tabs.Tab>
         ))}
       </Tabs.Container>
+      <AddFab accessibilityLabel="添加物品" onPress={() => router.push('/asset/form')} />
     </GestureHandlerRootView>
   );
 }

@@ -41,10 +41,19 @@ export function NativeSheet({ visible, onClose, title, children, leading, traili
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.root}>
         <Pressable style={styles.dim} onPress={onClose} accessibilityLabel="关闭" />
-        <View style={[styles.sheet, { backgroundColor: sheetBg, paddingBottom: Math.max(insets.bottom, 16) }]}>
-          <View style={styles.grabberWrap}>
-            <View style={[styles.grabber, { backgroundColor: grabber }]} />
-          </View>
+        <View
+          style={[
+            styles.sheet,
+            Platform.OS !== 'ios' && styles.sheetMd,
+            { backgroundColor: sheetBg, paddingBottom: Math.max(insets.bottom, 16) },
+          ]}>
+          {Platform.OS === 'ios' ? (
+            <View style={styles.grabberWrap}>
+              <View style={[styles.grabber, { backgroundColor: grabber }]} />
+            </View>
+          ) : (
+            <View style={styles.mdHandle} />
+          )}
           {title ? (
             <View style={styles.titleRow}>
               <View style={styles.side}>{leading}</View>
@@ -72,6 +81,12 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 28,
     overflow: 'hidden',
   },
+  sheetMd: {
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    elevation: 8,
+  },
+  mdHandle: { height: 8 },
   grabberWrap: {
     alignItems: 'center',
     paddingTop: 8,

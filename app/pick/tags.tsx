@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GlassIconButton } from '../../src/components/GlassIconButton';
@@ -20,6 +20,7 @@ export default function PickTagsScreen() {
   const addTag = useStore((s) => s.addTag);
   const commitTagPicker = useStore((s) => s.commitTagPicker);
   const [draft, setDraft] = useState<string[]>(seed);
+  const [newName, setNewName] = useState('');
 
   const toggle = (tag: string) => {
     setDraft((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
@@ -32,13 +33,17 @@ export default function PickTagsScreen() {
   };
 
   const promptNew = () => {
-    if (Alert.prompt) {
+    if (Platform.OS === 'ios' && Alert.prompt) {
       Alert.prompt('新建标签', '输入标签名称', (v) => {
         if (v?.trim()) createTag(v);
       });
-      return;
     }
-    createTag('未命名');
+  };
+
+  const submitNew = () => {
+    if (!newName.trim()) return;
+    createTag(newName);
+    setNewName('');
   };
 
   const confirm = () => {
@@ -63,8 +68,19 @@ export default function PickTagsScreen() {
           {library.map((tag) => (
             <TagChip key={tag} label={tag} selected={draft.includes(tag)} onPress={() => toggle(tag)} />
           ))}
-          <TagChipAdd onPress={promptNew} />
+          {Platform.OS === 'ios' ? <TagChipAdd onPress={promptNew} /> : null}
         </ChipWrap>
+        {Platform.OS !== 'ios' ? (
+          <TextInput
+            value={newName}
+            onChangeText={setNewName}
+            placeholder="新建标签"
+            placeholderTextColor={c.textTertiary}
+            onSubmitEditing={submitNew}
+            returnKeyType="done"
+            style={[styles.mdInput, { backgroundColor: c.chip, color: c.text }]}
+          />
+        ) : null}
       </View>
 
       <Pressable
@@ -115,4 +131,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   manageText: { fontSize: 17, fontWeight: '600' },
+  mdInput: {
+    marginTop: 16,
+    height: 48,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    fontSize: 16,
+  },
 });

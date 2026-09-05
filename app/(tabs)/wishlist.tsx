@@ -1,11 +1,12 @@
 import { router } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { formatMoney, todayISO } from '../../src/calc';
+import { AddFab } from '../../src/components/AddFab';
 import { CostBar } from '../../src/components/CostBar';
 import { GroupedSection } from '../../src/components/GroupedList';
 import { LargeTitleScreen } from '../../src/components/LargeTitleScreen';
+import { PlatformIcon } from '../../src/native/PlatformIcon';
 import { StickerImage } from '../../src/components/StickerImage';
 import { LIME } from '../../src/theme';
 import { useStore } from '../../src/store';
@@ -19,14 +20,19 @@ export default function WishlistScreen() {
   const addAsset = useStore((s) => s.addAsset);
 
   const saveMore = (id: string, saved: number) => {
-    if (Alert.prompt) {
+    if (Platform.OS === 'ios' && Alert.prompt) {
       Alert.prompt('存一笔', '金额', (v) => {
         const n = Number(v);
         if (n) updateWish(id, { saved: saved + n });
       });
       return;
     }
-    updateWish(id, { saved: saved + 200 });
+    Alert.alert('存一笔', '选择金额', [
+      { text: '取消', style: 'cancel' },
+      { text: '+50', onPress: () => updateWish(id, { saved: saved + 50 }) },
+      { text: '+200', onPress: () => updateWish(id, { saved: saved + 200 }) },
+      { text: '+500', onPress: () => updateWish(id, { saved: saved + 500 }) },
+    ]);
   };
 
   const buyIn = (w: (typeof wishes)[number]) => {
@@ -47,7 +53,10 @@ export default function WishlistScreen() {
   };
 
   return (
-    <LargeTitleScreen title="心愿" subtitle="先攒够再买，每件东西心里有杆秤">
+    <LargeTitleScreen
+      title="心愿"
+      subtitle="先攒够再买，每件东西心里有杆秤"
+      overlay={<AddFab accessibilityLabel="添加心愿" onPress={() => router.push('/asset/form?kind=wish')} />}>
       {wishes.map((w) => {
         const p = Math.min(1, w.saved / w.targetPrice);
         const ready = p >= 1;
@@ -95,7 +104,7 @@ export default function WishlistScreen() {
                     ])
                   }
                   style={({ pressed }) => [styles.trashBtn, pressed && { opacity: 0.6 }]}>
-                  <SymbolView name="trash" size={16} tintColor={c.danger} />
+                  <PlatformIcon name="trash" size={18} color={c.danger} />
                 </Pressable>
               </View>
             </View>
@@ -106,7 +115,7 @@ export default function WishlistScreen() {
       {wishes.length === 0 ? (
         <View style={styles.emptyWrap}>
           <View style={[styles.emptyIcon, { backgroundColor: c.card }]}>
-            <SymbolView name="heart" size={28} tintColor={LIME} />
+            <PlatformIcon name="heart" size={28} color={LIME} />
           </View>
           <Text style={[styles.emptyTitle, { color: c.text }]}>还没有心愿</Text>
           <Text style={[styles.emptySub, { color: c.textSecondary }]}>记下想买的东西，攒够再下手</Text>

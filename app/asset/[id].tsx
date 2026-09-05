@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
+import { PlatformIcon } from '../../src/native/PlatformIcon';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -91,7 +91,7 @@ export default function AssetDetail() {
         </View>
 
         <Pressable style={styles.deleteBtn} onPress={del}>
-          <SymbolView name="trash" size={15} tintColor={c.danger} />
+          <PlatformIcon name="trash" size={16} color={c.danger} />
           <Text style={[styles.deleteText, { color: c.danger }]}>删除</Text>
         </Pressable>
       </ScrollView>

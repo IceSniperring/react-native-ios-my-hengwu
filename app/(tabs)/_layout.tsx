@@ -1,7 +1,9 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { router, usePathname } from 'expo-router';
 import { useRef } from 'react';
+import { Platform } from 'react-native';
 
+import { LIME } from '../../src/theme';
 import { useColors } from '../../src/useColors';
 
 export default function TabLayout() {
@@ -21,6 +23,9 @@ export default function TabLayout() {
       minimizeBehavior="never"
       disableTransparentOnScrollEdge
       backgroundColor={c.bg}
+      labelVisibilityMode={Platform.OS === 'android' ? 'labeled' : undefined}
+      indicatorColor={Platform.OS === 'android' ? LIME : undefined}
+      rippleColor={Platform.OS === 'android' ? 'rgba(169,214,46,0.24)' : undefined}
       labelStyle={{
         default: { fontSize: 10, color: inactive },
         selected: { fontSize: 10, fontWeight: '700', color: selected },
@@ -67,6 +72,7 @@ export default function TabLayout() {
       <NativeTabs.Trigger
         name="add"
         role="search"
+        hidden={Platform.OS !== 'ios'}
         disabled
         contentStyle={screenBg}
         accessibilityLabel={onWishlist ? '添加心愿' : '添加物品'}

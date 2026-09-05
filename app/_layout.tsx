@@ -51,7 +51,7 @@ export default function RootLayout() {
 
   const nativeHeader = {
     headerShown: true,
-    headerShadowVisible: false,
+    headerShadowVisible: Platform.OS === 'android',
     headerBackTitle: '返回',
     headerTintColor: c.text,
     headerTitleStyle: { fontWeight: '600' as const, color: c.text },

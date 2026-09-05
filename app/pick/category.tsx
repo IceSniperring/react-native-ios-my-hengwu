@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
+import { PlatformIcon } from '../../src/native/PlatformIcon';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -64,7 +64,7 @@ export default function PickCategoryScreen() {
                 pressed && { backgroundColor: c.chip },
               ]}>
               <Text style={[styles.rowLabel, { color: c.text }]}>{cat.label}</Text>
-              {on ? <SymbolView name="checkmark" size={16} tintColor={LIME} /> : null}
+              {on ? <PlatformIcon name="checkmark" size={18} color={LIME} /> : null}
             </Pressable>
           );
         })}

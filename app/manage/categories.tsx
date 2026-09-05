@@ -1,4 +1,4 @@
-import { SymbolView } from 'expo-symbols';
+import { PlatformIcon } from '../../src/native/PlatformIcon';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -88,7 +88,7 @@ export default function ManageCategoriesScreen() {
             styles.addBtn,
             { backgroundColor: LIME, opacity: !draft.trim() ? 0.4 : pressed ? 0.85 : 1 },
           ]}>
-          <SymbolView name="plus" size={14} tintColor="#1C1C1E" />
+          <PlatformIcon name="plus" size={16} color="#1C1C1E" />
           <Text style={styles.addText}>添加</Text>
         </Pressable>
       </View>

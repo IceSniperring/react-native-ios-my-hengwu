@@ -1,7 +1,8 @@
-import { SymbolView, type SFSymbol } from 'expo-symbols';
+import type { SFSymbol } from 'expo-symbols';
 import type { ComponentType, ReactNode } from 'react';
 import { Platform, Pressable, StyleSheet } from 'react-native';
 
+import { PlatformIcon } from '../native/PlatformIcon';
 import { useColors } from '../useColors';
 
 type Props = {
@@ -43,8 +44,21 @@ export function GlassIconButton({ name, onPress, accessibilityLabel, size = 36 }
   const c = useColors();
   const glass = loadGlass();
   const glassOn = canUseGlass(glass);
-  const icon = <SymbolView name={name} size={size >= 40 ? 18 : 17} tintColor={c.text} />;
+  const icon = <PlatformIcon name={name} size={size >= 40 ? 18 : 17} color={c.text} />;
   const box = { width: size, height: size, borderRadius: size / 2 };
+
+  if (Platform.OS === 'android') {
+    return (
+      <Pressable
+        onPress={onPress}
+        hitSlop={8}
+        accessibilityLabel={accessibilityLabel}
+        android_ripple={{ color: 'rgba(128,128,128,0.24)', borderless: true, radius: size / 2 }}
+        style={[styles.btn, box]}>
+        {icon}
+      </Pressable>
+    );
+  }
 
   if (glassOn && glass) {
     const { GlassView } = glass;

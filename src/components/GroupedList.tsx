@@ -1,7 +1,8 @@
-import { SymbolView, type SFSymbol } from 'expo-symbols';
+import type { SFSymbol } from 'expo-symbols';
 import { Children, type ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { PlatformIcon } from '../native/PlatformIcon';
 import { useColors } from '../useColors';
 
 const ICON = 29;
@@ -21,7 +22,12 @@ export function GroupedSection({
   return (
     <View style={styles.section}>
       {header ? <Text style={[styles.header, { color: c.textSecondary }]}>{header}</Text> : null}
-      <View style={[styles.card, { backgroundColor: c.card }]}>
+      <View
+        style={[
+          styles.card,
+          Platform.OS !== 'ios' && styles.cardMd,
+          { backgroundColor: c.card },
+        ]}>
         {items.map((child, i) => (
           <View key={i}>
             {child}
@@ -63,11 +69,11 @@ export function GroupedRow({
   const inner = (
     <>
       {icon ? (
-        <View style={[styles.iconWell, { backgroundColor: iconBg ?? c.lime }]}>
-          <SymbolView name={icon} size={16} tintColor={iconTint} />
+        <View style={[styles.iconWell, Platform.OS !== 'ios' && styles.iconWellMd, { backgroundColor: iconBg ?? c.lime }]}>
+          <PlatformIcon name={icon} size={16} color={iconTint} />
         </View>
       ) : null}
-      <Text style={[styles.label, { color }]} numberOfLines={1}>
+      <Text style={[styles.label, Platform.OS !== 'ios' && styles.labelMd, { color }]} numberOfLines={1}>
         {label}
       </Text>
       {value ? (
@@ -76,7 +82,7 @@ export function GroupedRow({
         </Text>
       ) : null}
       {accessory}
-      {showChevron ? <SymbolView name="chevron.right" size={12} tintColor={c.textTertiary} /> : null}
+      {showChevron ? <PlatformIcon name="chevron.right" size={18} color={c.textTertiary} /> : null}
     </>
   );
 
@@ -86,13 +92,14 @@ export function GroupedRow({
         onPress={onPress}
         accessibilityRole="button"
         accessibilityLabel={label}
-        style={({ pressed }) => [styles.row, pressed && { backgroundColor: c.chip }]}>
+        android_ripple={Platform.OS === 'android' ? { color: 'rgba(128,128,128,0.16)' } : undefined}
+        style={({ pressed }) => [styles.row, Platform.OS !== 'ios' && styles.rowMd, pressed && Platform.OS !== 'android' && { backgroundColor: c.chip }]}>
         {inner}
       </Pressable>
     );
   }
 
-  return <View style={styles.row}>{inner}</View>;
+  return <View style={[styles.row, Platform.OS !== 'ios' && styles.rowMd]}>{inner}</View>;
 }
 
 const styles = StyleSheet.create({
@@ -110,6 +117,19 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 26,
     overflow: 'hidden',
+  },
+  cardMd: {
+    borderRadius: 12,
+    elevation: 1,
+  },
+  rowMd: {
+    minHeight: 56,
+  },
+  iconWellMd: {
+    borderRadius: 8,
+  },
+  labelMd: {
+    fontSize: 16,
   },
   sep: {
     height: StyleSheet.hairlineWidth,
