@@ -29,9 +29,9 @@ export function AssetCard({ asset, onPress, size }: Props) {
   const progress = targetProgress(asset);
   const progressLabel = Math.round(progress * 100);
   const progressWidth = (progress * 100 + '%') as DimensionValue;
-  const badgeBg = scheme === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(0,0,0,0.35)';
-  const cardBg = scheme === 'light' ? '#FFFFFF' : '#1C1C1E';
-  const arrowColor = scheme === 'light' ? '#111111' : '#FFFFFF';
+  const badgeBg = scheme === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.1)';
+  const cardBg = c.card;
+  const arrowColor = c.text;
 
   return (
     <Pressable

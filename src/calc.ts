@@ -101,16 +101,15 @@ export function daysAgoISO(days: number) {
   return addDaysISO(todayISO(), -days);
 }
 
-export function dailyCostHistory(asset: Asset, points = 12) {
+export function dailyCostHistory(asset: Asset, points = 6) {
   const days = holdingDays(asset);
-  const start = Math.max(1, Math.min(days, Math.floor(days * 0.12) || 1));
+  const count = Math.max(2, points);
   const data: { day: number; value: number; date: string }[] = [];
-  const span = Math.max(1, days - start);
-  for (let p = 0; p < points; p++) {
-    const i = Math.round(start + (span * p) / (points - 1));
+  for (let p = 0; p < count; p++) {
+    const i = Math.max(1, Math.round(1 + ((days - 1) * p) / (count - 1)));
     data.push({
       day: i,
-      value: asset.purchasePrice / Math.max(1, i),
+      value: asset.purchasePrice / i,
       date: addDaysISO(asset.purchaseDate, i - 1),
     });
   }

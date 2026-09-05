@@ -1,13 +1,6 @@
 export type AssetStatus = 'active' | 'retired' | 'sold';
 
-export type CategoryId =
-  | 'all'
-  | 'digital'
-  | 'home'
-  | 'transport'
-  | 'blindbox'
-  | 'office'
-  | 'uncategorized';
+export type CategoryId = string;
 
 export type ProductKey =
   | 'macbook'
@@ -30,7 +23,7 @@ export type ProductKey =
 export interface Asset {
   id: string;
   name: string;
-  category: Exclude<CategoryId, 'all'>;
+  category: string;
   status: AssetStatus;
   purchasePrice: number;
   purchaseDate: string;
@@ -43,6 +36,9 @@ export interface Asset {
   soldDate?: string;
   retiredDate?: string;
   note?: string;
+  tags?: string[];
+  costMode?: 'day' | 'count' | 'custom';
+  targetMode?: 'none' | 'price' | 'date' | 'custom';
 }
 
 export interface WishItem {
@@ -50,10 +46,11 @@ export interface WishItem {
   name: string;
   targetPrice: number;
   saved: number;
-  category: Exclude<CategoryId, 'all'>;
+  category: string;
   imageKey?: ProductKey;
   imageUri?: string;
   note?: string;
+  tags?: string[];
 }
 
 export interface SavingsPlan {
@@ -64,7 +61,18 @@ export interface SavingsPlan {
   deadline?: string;
 }
 
-export const CATEGORIES: { id: CategoryId; label: string }[] = [
+export type CatalogItem = { id: string; label: string };
+
+export const BUILTIN_CATEGORY_IDS = [
+  'digital',
+  'home',
+  'transport',
+  'blindbox',
+  'office',
+  'uncategorized',
+] as const;
+
+export const CATEGORIES: CatalogItem[] = [
   { id: 'all', label: '全部' },
   { id: 'digital', label: '数码' },
   { id: 'home', label: '家居' },
@@ -73,6 +81,23 @@ export const CATEGORIES: { id: CategoryId; label: string }[] = [
   { id: 'office', label: '办公' },
   { id: 'uncategorized', label: '未分类' },
 ];
+
+const BUILTIN_SET = new Set<string>(BUILTIN_CATEGORY_IDS);
+
+export function isBuiltinCategory(id: string) {
+  return id === 'all' || BUILTIN_SET.has(id);
+}
+
+export function mergeCategories(custom: CatalogItem[]) {
+  const selectable = [
+    ...CATEGORIES.filter((c) => c.id !== 'all'),
+    ...custom.filter((c) => c.id !== 'all' && !BUILTIN_SET.has(c.id)),
+  ];
+  return {
+    withAll: [CATEGORIES[0]!, ...selectable],
+    selectable,
+  };
+}
 
 export const STATUS_FILTERS: { id: AssetStatus | 'all'; label: string }[] = [
   { id: 'all', label: '全部' },

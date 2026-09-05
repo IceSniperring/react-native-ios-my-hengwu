@@ -13,7 +13,7 @@ type Props = {
 export function CostBar({ progress, label, color, height = 8 }: Props) {
   const c = useColors();
   const p = Math.min(1, Math.max(0, progress));
-  const fill = color ?? c.tint;
+  const fill = color ?? c.lime;
   return (
     <View>
       <View style={[styles.track, { height, borderRadius: height, backgroundColor: c.track }]}>

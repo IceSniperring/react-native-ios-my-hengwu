@@ -21,8 +21,8 @@ export function OverviewCard({ total, daily, active, retired, sold }: Props) {
   const scheme = useStore((s) => s.colorScheme);
   const totalCount = active + retired + sold;
   const sum = totalCount || 1;
-  const paper = scheme === 'dark' ? '#1C1C1E' : '#FFFFFF';
-  const dashColor = scheme === 'dark' ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.12)';
+  const paper = c.card;
+  const dashColor = scheme === 'dark' ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.12)';
   const pillBg = scheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)';
 
   return (

@@ -1,68 +1,132 @@
-import { Stack, router, useLocalSearchParams } from 'expo-router';
-import { useState, type ComponentProps } from 'react';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { router, useLocalSearchParams } from 'expo-router';
+import { SymbolView, type SFSymbol } from 'expo-symbols';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+} from 'react-native-reanimated';
 
-import { todayISO } from '../../src/calc';
+import { parseISO, toISO, todayISO } from '../../src/calc';
+import { GlassIconButton } from '../../src/components/GlassIconButton';
 import { StickerImage } from '../../src/components/StickerImage';
-import { NativeDateField } from '../../src/native/NativeDateField';
-import { showNativeSheet } from '../../src/native/sheet';
+import { NativeMenu } from '../../src/native/NativeMenu';
+import { NativeSegmented } from '../../src/native/NativeSegmented';
+import { NativeSheet } from '../../src/native/NativeSheet';
 import { pickAssetImage, takeAssetPhoto } from '../../src/pickImage';
+import { useCategoryLabel } from '../../src/catalog';
+import { LIME } from '../../src/theme';
 import { useStore } from '../../src/store';
-import { radius } from '../../src/theme';
 import { useColors } from '../../src/useColors';
-import { CATEGORIES, type CategoryId, type ProductKey } from '../../src/types';
+import { type ProductKey } from '../../src/types';
 
-const KEYS: ProductKey[] = [
-  'macbook',
-  'iphone',
-  'watch',
-  'earbuds',
-  'headphones',
-  'backpack',
-  'speaker',
-  'tablet',
-  'controller',
-  'camera',
-  'gold',
-  'vr',
-];
+type AssetType = 'asset' | 'wish';
+const COST_MODES = ['按天', '按次', '自定义'] as const;
+const TARGET_MODES = ['不设定', '按价格', '按日期', '自定义'] as const;
+const COST_IDS = ['day', 'count', 'custom'] as const;
+const TARGET_IDS = ['none', 'price', 'date', 'custom'] as const;
+const CHROME_PAD = 10;
+const CHROME_ROW = 40;
+const FADE_HEIGHT = 28;
 
 export default function AssetForm() {
-  const { id } = useLocalSearchParams<{ id?: string }>();
+  const { id, kind: kindParam } = useLocalSearchParams<{ id?: string; kind?: string }>();
   const c = useColors();
+  const insets = useSafeAreaInsets();
+  const scheme = useStore((s) => s.colorScheme);
   const existing = useStore((s) => s.assets.find((a) => a.id === id));
   const addAsset = useStore((s) => s.addAsset);
   const updateAsset = useStore((s) => s.updateAsset);
+  const addWish = useStore((s) => s.addWish);
+  const addTag = useStore((s) => s.addTag);
+  const asWish = kindParam === 'wish' && !existing;
 
   const [name, setName] = useState(existing?.name ?? '');
   const [price, setPrice] = useState(existing ? String(existing.purchasePrice) : '');
   const [date, setDate] = useState(existing?.purchaseDate ?? todayISO());
-  const [category, setCategory] = useState<Exclude<CategoryId, 'all'>>(existing?.category ?? 'digital');
-  const [target, setTarget] = useState(existing ? String(existing.targetDailyCost) : '10');
-  const [expected, setExpected] = useState(existing ? String(existing.expectedDays) : '365');
-  const [note, setNote] = useState(existing?.note ?? '');
+  const [category, setCategory] = useState(existing?.category ?? 'digital');
+  const [kind, setKind] = useState<AssetType>(asWish ? 'wish' : 'asset');
+  const [costMode, setCostMode] = useState(
+    Math.max(0, COST_IDS.indexOf((existing?.costMode ?? 'day') as (typeof COST_IDS)[number])),
+  );
+  const [targetMode, setTargetMode] = useState(
+    Math.max(0, TARGET_IDS.indexOf((existing?.targetMode ?? 'none') as (typeof TARGET_IDS)[number])),
+  );
+  const [target, setTarget] = useState(existing ? String(existing.targetDailyCost) : '');
+  const [expected, setExpected] = useState(existing ? String(existing.expectedDays) : '');
+  const [tags, setTags] = useState<string[]>(existing?.tags ?? []);
   const [imageKey, setImageKey] = useState<ProductKey | undefined>(existing?.imageKey);
   const [imageUri, setImageUri] = useState<string | undefined>(existing?.imageUri);
   const [lifting, setLifting] = useState(false);
+  const [dateOpen, setDateOpen] = useState(false);
+  const tagPickerResult = useStore((s) => s.tagPickerResult);
+  const categoryPickerResult = useStore((s) => s.categoryPickerResult);
+  const beginTagPicker = useStore((s) => s.beginTagPicker);
+  const beginCategoryPicker = useStore((s) => s.beginCategoryPicker);
+  const clearTagPickerResult = useStore((s) => s.clearTagPickerResult);
+  const clearCategoryPickerResult = useStore((s) => s.clearCategoryPickerResult);
+
+  useEffect(() => {
+    if (!tagPickerResult) return;
+    setTags(tagPickerResult);
+    clearTagPickerResult();
+  }, [tagPickerResult, clearTagPickerResult]);
+
+  useEffect(() => {
+    if (!categoryPickerResult) return;
+    setCategory(categoryPickerResult);
+    clearCategoryPickerResult();
+  }, [categoryPickerResult, clearCategoryPickerResult]);
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler({
+    onScroll: (e) => {
+      scrollY.value = e.contentOffset.y;
+    },
+  });
+  const fadeStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(Math.max(scrollY.value, 0), [0, 14], [0, 1], Extrapolation.CLAMP),
+  }));
 
   const save = () => {
     const purchasePrice = Number(price);
+    if (!name.trim()) return Alert.alert('请填写名称');
+    if (!purchasePrice || purchasePrice <= 0) return Alert.alert(kind === 'wish' ? '请填写目标价格' : '请填写买入价');
+    if (kind === 'asset' && !/^\d{4}-\d{2}-\d{2}$/.test(date)) return Alert.alert('日期格式 YYYY-MM-DD');
+
+    for (const t of tags) addTag(t);
+
+    if (kind === 'wish' && !existing) {
+      addWish({
+        name: name.trim(),
+        targetPrice: purchasePrice,
+        saved: 0,
+        category,
+        imageKey,
+        imageUri,
+        tags,
+      });
+      router.back();
+      return;
+    }
+
     const targetDailyCost = Number(target);
     const expectedDays = Number(expected);
-    if (!name.trim()) return Alert.alert('请填写名称');
-    if (!purchasePrice || purchasePrice <= 0) return Alert.alert('请填写买入价');
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return Alert.alert('日期格式 YYYY-MM-DD');
     const payload = {
       name: name.trim(),
       purchasePrice,
@@ -70,7 +134,6 @@ export default function AssetForm() {
       category,
       targetDailyCost: targetDailyCost > 0 ? targetDailyCost : purchasePrice / 365,
       expectedDays: expectedDays > 0 ? expectedDays : 365,
-      note,
       imageKey,
       imageUri,
       status: existing?.status ?? ('active' as const),
@@ -78,6 +141,9 @@ export default function AssetForm() {
       soldPrice: existing?.soldPrice,
       soldDate: existing?.soldDate,
       retiredDate: existing?.retiredDate,
+      tags,
+      costMode: COST_IDS[costMode],
+      targetMode: TARGET_IDS[targetMode],
     };
     if (existing) {
       updateAsset(existing.id, payload);
@@ -88,169 +154,336 @@ export default function AssetForm() {
     }
   };
 
-  const runPick = (fn: () => Promise<string | null>) => {
-    showNativeSheet({
-      title: '添加贴纸',
-      items: [
-        {
-          label: '拍照',
-          onPress: async () => {
-            setLifting(true);
-            try {
-              const uri = await takeAssetPhoto();
-              if (uri) {
-                setImageUri(uri);
-                setImageKey(undefined);
-              }
-            } finally {
-              setLifting(false);
-            }
-          },
-        },
-        {
-          label: '从相册选择',
-          onPress: async () => {
-            setLifting(true);
-            try {
-              const uri = await pickAssetImage();
-              if (uri) {
-                setImageUri(uri);
-                setImageKey(undefined);
-              }
-            } finally {
-              setLifting(false);
-            }
-          },
-        },
-      ],
-    });
+  const pickFromMenu = async (id: string) => {
+    setLifting(true);
+    try {
+      const uri = id === 'camera' ? await takeAssetPhoto() : await pickAssetImage();
+      if (uri) {
+        setImageUri(uri);
+        setImageKey(undefined);
+      }
+    } finally {
+      setLifting(false);
+    }
   };
 
+  const categoryLabel = useCategoryLabel(category);
+  const dateLabel = (() => {
+    const d = parseISO(date);
+    return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+  })();
+  const cardBg = c.card;
+
   return (
-    <KeyboardAvoidingView style={[styles.root, { backgroundColor: c.bg }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <Stack.Screen
-        options={{
-          title: existing ? '编辑资产' : '录入资产',
-          headerRight: () => (
-            <Pressable onPress={save} hitSlop={8}>
-              <Text style={[styles.saveText, { color: c.tint }]}>保存</Text>
-            </Pressable>
-          ),
+    <KeyboardAvoidingView
+      style={[styles.root, { backgroundColor: c.bg }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <Animated.ScrollView
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        contentContainerStyle={{
+          paddingTop: CHROME_PAD + CHROME_ROW + 8,
+          paddingBottom: insets.bottom + 48,
         }}
-      />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
-        <View style={styles.photoRow}>
-          <Pressable onPress={() => runPick(pickAssetImage)} disabled={lifting}>
-            <View>
-              <StickerImage imageKey={imageKey} imageUri={imageUri} size={96} />
-              {lifting ? (
-                <View style={styles.liftingMask}>
-                  <ActivityIndicator color={c.tint} />
-                </View>
-              ) : null}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}>
+        <View style={styles.heroSection}>
+          <View>
+            <StickerImage imageKey={imageKey} imageUri={imageUri} size={108} radius={22} />
+            {lifting ? (
+              <View style={styles.liftingMask}>
+                <ActivityIndicator color={LIME} />
+              </View>
+            ) : null}
+          </View>
+          <NativeMenu
+            style={styles.changeIconMenu}
+            title="更换图标"
+            actions={[
+              { id: 'camera', title: '拍照', image: 'camera' },
+              { id: 'library', title: '从相册选择', image: 'photo' },
+            ]}
+            onSelect={(id) => {
+              if (!lifting) void pickFromMenu(id);
+            }}>
+            <View style={[styles.changeIconBtn, { backgroundColor: c.chip }]}>
+              <SymbolView name="arrow.triangle.2.circlepath" size={13} tintColor={c.textSecondary} />
+              <Text style={[styles.changeIconText, { color: c.textSecondary }]}>
+                {lifting ? '正在抠图…' : '更换图标'}
+              </Text>
             </View>
+          </NativeMenu>
+        </View>
+
+        <View style={[styles.card, { backgroundColor: cardBg }]}>
+          <FieldRow icon="square.grid.2x2" label="名称" c={c}>
+            <TextInput
+              value={name}
+              onChangeText={setName}
+              placeholder="例如 MacBook Pro"
+              placeholderTextColor={c.textTertiary}
+              style={[styles.valueInput, { color: c.text }]}
+            />
+          </FieldRow>
+          <FieldRow icon="yensign.circle" label={kind === 'wish' ? '目标价格' : '价格'} c={c}>
+            <TextInput
+              value={price}
+              onChangeText={setPrice}
+              keyboardType="decimal-pad"
+              placeholder="0.00"
+              placeholderTextColor={c.textTertiary}
+              style={[styles.valueInput, { color: c.text }]}
+            />
+          </FieldRow>
+          <FieldRow icon="point.3.connected.trianglepath.dotted" label="类型" c={c} last>
+            <NativeSegmented
+              compact
+              style={styles.typeSeg}
+              values={['资产', '心愿']}
+              selectedIndex={kind === 'asset' ? 0 : 1}
+              onChange={(i) => setKind(i === 0 ? 'asset' : 'wish')}
+            />
+          </FieldRow>
+        </View>
+
+        <View style={[styles.card, { backgroundColor: cardBg }]}>
+          {kind === 'asset' ? (
+            <Pressable onPress={() => setDateOpen(true)}>
+              <FieldRow icon="calendar" label="购买日期" c={c} chevron>
+                <Text style={[styles.valueText, { color: c.text }]}>{dateLabel}</Text>
+              </FieldRow>
+            </Pressable>
+          ) : null}
+          <Pressable
+            onPress={() => {
+              beginCategoryPicker(category);
+              router.push('/pick/category');
+            }}>
+            <FieldRow icon="square.grid.2x2" label="类别" c={c} chevron>
+              <Text style={[styles.valueText, { color: c.text }]}>{categoryLabel}</Text>
+            </FieldRow>
           </Pressable>
           <Pressable
-            style={[styles.photoBtn, { backgroundColor: c.chip }]}
-            onPress={() => runPick(pickAssetImage)}
-            disabled={lifting}>
-            <Text style={[styles.photoBtnText, { color: c.text }]}>
-              {lifting ? '正在抠图成贴纸…' : '拍照或相册'}
-            </Text>
+            onPress={() => {
+              beginTagPicker(tags);
+              router.push('/pick/tags');
+            }}>
+            <FieldRow icon="tag" label="标签" c={c} last chevron>
+              <Text
+                style={[styles.valueText, { color: tags.length ? c.text : c.textTertiary }]}
+                numberOfLines={1}>
+                {tags.length ? tags.join('、') : '选择'}
+              </Text>
+            </FieldRow>
           </Pressable>
         </View>
-        <Text style={[styles.hint, { color: c.textTertiary }]}>
-          真机 + 开发构建下会用 Vision 抠主体并加白边；Expo Go / 模拟器会回退原图。
-        </Text>
 
-        <Text style={[styles.label, { color: c.textSecondary }]}>贴纸模板</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingVertical: 8 }}>
-          {KEYS.map((k) => (
-            <Pressable key={k} onPress={() => { setImageKey(k); setImageUri(undefined); }}>
-              <StickerImage
-                imageKey={k}
-                size={64}
-                radius={14}
-                style={imageKey === k ? { borderWidth: 2, borderColor: c.tint, borderRadius: 16 } : undefined}
+        {kind === 'asset' ? (
+          <>
+            <View style={[styles.card, { backgroundColor: cardBg }]}>
+              <FieldRow icon="calendar.badge.clock" label="成本计算规则" c={c} last />
+              <NativeSegmented
+                compact
+                style={styles.blockSeg}
+                values={[...COST_MODES]}
+                selectedIndex={costMode}
+                onChange={setCostMode}
               />
-            </Pressable>
-          ))}
-        </ScrollView>
+            </View>
 
-        <Field label="物品名称" value={name} onChangeText={setName} placeholder="例如 MacBook Pro" />
-        <Field label="买入价（元）" value={price} onChangeText={setPrice} keyboardType="decimal-pad" placeholder="8999" />
-        <NativeDateField label="购入日期" value={date} onChange={setDate} />
-        <Field label="目标日均成本（元/天）" value={target} onChangeText={setTarget} keyboardType="decimal-pad" placeholder="10" />
-        <Field label="预计服役天数" value={expected} onChangeText={setExpected} keyboardType="number-pad" placeholder="365" />
+            <View style={[styles.card, { backgroundColor: cardBg }]}>
+              <View style={styles.targetHead}>
+                <SymbolView name="scope" size={16} tintColor={c.textSecondary} />
+                <Text style={[styles.fieldLabel, { color: c.text }]}>目标日均</Text>
+                <View style={[styles.limeDot, { backgroundColor: LIME }]}>
+                  <SymbolView name="checkmark" size={9} tintColor="#111111" />
+                </View>
+              </View>
+              <NativeSegmented
+                compact
+                style={styles.blockSeg}
+                values={[...TARGET_MODES]}
+                selectedIndex={targetMode}
+                onChange={setTargetMode}
+              />
+              {targetMode === 3 ? (
+                <TextInput
+                  value={target}
+                  onChangeText={setTarget}
+                  keyboardType="decimal-pad"
+                  placeholder="目标日均（元）"
+                  placeholderTextColor={c.textTertiary}
+                  style={[styles.extraInput, { color: c.text, backgroundColor: c.chip }]}
+                />
+              ) : null}
+            </View>
+          </>
+        ) : null}
+      </Animated.ScrollView>
 
-        <Text style={[styles.label, { color: c.textSecondary }]}>分类</Text>
-        <View style={styles.wrap}>
-          {CATEGORIES.filter((cat) => cat.id !== 'all').map((cat) => {
-            const on = category === cat.id;
-            return (
-              <Pressable
-                key={cat.id}
-                onPress={() => setCategory(cat.id as Exclude<CategoryId, 'all'>)}
-                style={[styles.chip, { backgroundColor: c.chip }, on && { backgroundColor: c.chipSelectedBg }]}>
-                <Text style={[styles.chipText, { color: c.text }, on && { color: c.chipSelectedText }]}>{cat.label}</Text>
-              </Pressable>
-            );
-          })}
+      <View pointerEvents="box-none" style={[styles.chrome, { backgroundColor: c.bg }]}>
+        <View pointerEvents="box-none" style={styles.chromeRow}>
+          <GlassIconButton name="xmark" size={40} accessibilityLabel="关闭" onPress={() => router.back()} />
+          <Text pointerEvents="none" style={[styles.chromeTitle, { color: c.text }]}>
+            {existing ? '编辑资产' : kind === 'wish' ? '录入心愿' : '录入资产'}
+          </Text>
+          <GlassIconButton name="checkmark" size={40} accessibilityLabel="保存" onPress={save} />
         </View>
-        <Field label="备注" value={note} onChangeText={setNote} placeholder="可选" />
-      </ScrollView>
+        <Animated.View pointerEvents="none" style={[styles.fade, fadeStyle]}>
+          <LinearGradient
+            colors={[c.bg, `${c.bg}00`]}
+            locations={[0.12, 1]}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+        </Animated.View>
+      </View>
+
+      <NativeSheet visible={dateOpen} onClose={() => setDateOpen(false)} title="购买日期">
+        <DateTimePicker
+          value={parseISO(date)}
+          mode="date"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          locale="zh-CN"
+          themeVariant={scheme}
+          style={styles.picker}
+          onChange={(_, next) => {
+            if (next) setDate(toISO(next));
+            if (Platform.OS !== 'ios') setDateOpen(false);
+          }}
+        />
+      </NativeSheet>
     </KeyboardAvoidingView>
   );
 }
 
-function ThemedInput(props: ComponentProps<typeof TextInput>) {
-  const c = useColors();
+function FieldRow({
+  icon,
+  label,
+  c,
+  children,
+  last,
+  chevron,
+}: {
+  icon: SFSymbol;
+  label: string;
+  c: { text: string; textSecondary: string; line: string; textTertiary: string };
+  children?: ReactNode;
+  last?: boolean;
+  chevron?: boolean;
+}) {
   return (
-    <TextInput
-      {...props}
-      placeholderTextColor={c.textTertiary}
-      style={[styles.input, { backgroundColor: c.input, color: c.text }]}
-    />
-  );
-}
-
-function Field(props: ComponentProps<typeof TextInput> & { label: string }) {
-  const { label, ...rest } = props;
-  const c = useColors();
-  return (
-    <View style={{ marginBottom: 14 }}>
-      <Text style={[styles.label, { color: c.textSecondary }]}>{label}</Text>
-      <ThemedInput {...rest} />
+    <View
+      style={[
+        styles.fieldRow,
+        !last && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.line },
+      ]}>
+      <SymbolView name={icon} size={16} tintColor={c.textSecondary} />
+      <Text style={[styles.fieldLabel, { color: c.text }]}>{label}</Text>
+      <View style={styles.fieldValue}>{children}</View>
+      {chevron ? <SymbolView name="chevron.right" size={12} tintColor={c.textTertiary} /> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  saveText: { fontWeight: '600', fontSize: 17 },
-  photoRow: { flexDirection: 'row', gap: 16, alignItems: 'center', marginBottom: 8 },
-  photoBtn: { borderRadius: 12, paddingVertical: 10, alignItems: 'center', flex: 1 },
-  photoBtnText: { fontWeight: '700' },
-  liftingMask: {
+  chrome: {
     position: 'absolute',
     top: 0,
-    right: 0,
-    bottom: 0,
     left: 0,
+    right: 0,
+    zIndex: 20,
+    paddingHorizontal: 16,
+    paddingTop: CHROME_PAD,
+    overflow: 'visible',
+  },
+  fade: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: -FADE_HEIGHT,
+    height: FADE_HEIGHT,
+  },
+  chromeRow: {
+    minHeight: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  chromeTitle: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    height: 40,
+    lineHeight: 40,
+    textAlign: 'center',
+    fontSize: 17,
+    fontWeight: '600',
+  },
+  heroSection: { alignItems: 'center', marginTop: 4, marginBottom: 20 },
+  liftingMask: {
+    ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.25)',
-    borderRadius: 16,
+    borderRadius: 22,
   },
-  hint: { fontSize: 12, marginBottom: 12, lineHeight: 16 },
-  label: { fontSize: 13, marginBottom: 8, fontWeight: '600' },
-  input: {
-    height: 48,
-    borderRadius: radius.md,
+  changeIconMenu: { alignSelf: 'center', marginTop: 12 },
+  changeIconBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     paddingHorizontal: 14,
-    fontSize: 16,
+    paddingVertical: 7,
+    borderRadius: 999,
   },
-  wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
-  chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999 },
-  chipText: { fontWeight: '700' },
+  changeIconText: { fontSize: 13, fontWeight: '500' },
+  card: {
+    marginHorizontal: 16,
+    marginBottom: 14,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 4,
+  },
+  fieldRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 48,
+    gap: 8,
+  },
+  fieldLabel: { fontSize: 15, fontWeight: '400' },
+  fieldValue: { flex: 1, alignItems: 'flex-end', justifyContent: 'center' },
+  valueInput: {
+    minWidth: 120,
+    fontSize: 15,
+    fontWeight: '500',
+    textAlign: 'right',
+    paddingVertical: 8,
+  },
+  valueText: { fontSize: 15, fontWeight: '500' },
+  typeSeg: { minWidth: 148, maxWidth: 168 },
+  blockSeg: { marginTop: 2, marginBottom: 12 },
+  picker: { alignSelf: 'stretch' },
+  targetHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    minHeight: 44,
+  },
+  limeDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  extraInput: {
+    height: 40,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    fontSize: 15,
+    marginBottom: 10,
+  },
 });

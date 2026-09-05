@@ -8,6 +8,7 @@ type Props = {
   name: SFSymbol;
   onPress: () => void;
   accessibilityLabel?: string;
+  size?: number;
 };
 
 type GlassModule = {
@@ -38,18 +39,18 @@ function canUseGlass(mod: GlassModule | null): boolean {
   return Boolean(liquid && api);
 }
 
-export function GlassIconButton({ name, onPress, accessibilityLabel }: Props) {
+export function GlassIconButton({ name, onPress, accessibilityLabel, size = 36 }: Props) {
   const c = useColors();
   const glass = loadGlass();
   const glassOn = canUseGlass(glass);
-  // Monochrome — follow primary text, not system blue tint.
-  const icon = <SymbolView name={name} size={18} tintColor={c.text} />;
+  const icon = <SymbolView name={name} size={size >= 40 ? 18 : 17} tintColor={c.text} />;
+  const box = { width: size, height: size, borderRadius: size / 2 };
 
   if (glassOn && glass) {
     const { GlassView } = glass;
     return (
       <Pressable onPress={onPress} hitSlop={8} accessibilityLabel={accessibilityLabel}>
-        <GlassView style={styles.btn} glassEffectStyle="regular" isInteractive>
+        <GlassView style={[styles.btn, box]} glassEffectStyle="regular" isInteractive>
           {icon}
         </GlassView>
       </Pressable>
@@ -61,7 +62,7 @@ export function GlassIconButton({ name, onPress, accessibilityLabel }: Props) {
       onPress={onPress}
       hitSlop={8}
       accessibilityLabel={accessibilityLabel}
-      style={[styles.btn, { backgroundColor: c.chip }]}>
+      style={[styles.btn, box, { backgroundColor: c.chip }]}>
       {icon}
     </Pressable>
   );

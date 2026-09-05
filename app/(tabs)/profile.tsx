@@ -1,16 +1,15 @@
 import { router } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
-import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Haptics from 'expo-haptics';
+import { Alert, StyleSheet, Switch, Text, View } from 'react-native';
 
+import { GroupedRow, GroupedSection } from '../../src/components/GroupedList';
+import { LargeTitleScreen } from '../../src/components/LargeTitleScreen';
 import { useOverview } from '../../src/hooks';
-import { showNativeSheet } from '../../src/native/sheet';
+import { LIME } from '../../src/theme';
 import { useStore } from '../../src/store';
-import { radius } from '../../src/theme';
 import { useColors } from '../../src/useColors';
 
 export default function ProfileScreen() {
-  const insets = useSafeAreaInsets();
   const c = useColors();
   const overview = useOverview();
   const wishes = useStore((s) => s.wishes);
@@ -22,137 +21,145 @@ export default function ProfileScreen() {
   const dark = scheme === 'dark';
 
   return (
-    <ScrollView
-      contentInsetAdjustmentBehavior="never"
-      style={{ flex: 1, backgroundColor: c.bg }}
-      contentContainerStyle={[styles.root, { paddingTop: insets.top }]}>
-      <Text style={[styles.title, { color: c.text }]}>我的</Text>
-      <View style={styles.hero}>
-        <View style={[styles.avatar, { backgroundColor: c.tint }]}>
-          <Text style={{ fontSize: 28, fontWeight: '800', color: '#FFFFFF' }}>衡</Text>
+    <LargeTitleScreen title="我的">
+      <GroupedSection>
+        <View style={styles.hero}>
+          <View style={[styles.avatar, { backgroundColor: LIME }]}>
+            <Text style={styles.avatarGlyph}>衡</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.name, { color: c.text }]}>衡物 · 本地账本</Text>
+            <Text style={[styles.meta, { color: c.textSecondary }]}>数据只存在这台手机</Text>
+          </View>
         </View>
-        <View>
-          <Text style={[styles.name, { color: c.text }]}>衡物 · 本地账本</Text>
-          <Text style={[styles.meta, { color: c.textSecondary }]}>数据只存在这台手机</Text>
+      </GroupedSection>
+
+      <GroupedSection>
+        <View style={styles.stats}>
+          <Stat n={overview.assets.length} l="资产" color={c.text} muted={c.textSecondary} />
+          <View style={[styles.statRule, { backgroundColor: c.line }]} />
+          <Stat n={wishes.length} l="心愿" color={c.text} muted={c.textSecondary} />
+          <View style={[styles.statRule, { backgroundColor: c.line }]} />
+          <Stat n={plans.length} l="攒钱计划" color={c.text} muted={c.textSecondary} />
         </View>
-      </View>
+      </GroupedSection>
 
-      <View style={[styles.stats, { backgroundColor: c.input }]}>
-        <Stat n={overview.assets.length} l="资产" color={c.text} muted={c.textSecondary} />
-        <Stat n={wishes.length} l="心愿" color={c.text} muted={c.textSecondary} />
-        <Stat n={plans.length} l="攒钱计划" color={c.text} muted={c.textSecondary} />
-      </View>
-
-      <View style={[styles.row, { borderBottomColor: c.line }]}>
-        <SymbolView name="moon.fill" size={20} tintColor={c.text} />
-        <Text style={[styles.rowText, { color: c.text }]}>深色模式</Text>
-        <Switch
-          value={dark}
-          onValueChange={(v) => setColorScheme(v ? 'dark' : 'light')}
-          trackColor={{ false: '#E5E5EA', true: c.tint }}
-          thumbColor="#FFFFFF"
-          ios_backgroundColor="#E5E5EA"
+      <GroupedSection header="外观">
+        <GroupedRow
+          icon="moon.fill"
+          iconBg="#5856D6"
+          label="深色模式"
+          chevron={false}
+          accessory={
+            <Switch
+              value={dark}
+              onValueChange={(v) => {
+                Haptics.selectionAsync();
+                setColorScheme(v ? 'dark' : 'light');
+              }}
+              trackColor={{ false: c.track, true: LIME }}
+              thumbColor="#FFFFFF"
+              ios_backgroundColor={c.track}
+            />
+          }
         />
-      </View>
+      </GroupedSection>
 
-      <Row icon="leaf" label="智能攒钱计划" color={c.text} chevron={c.textTertiary} line={c.line} onPress={() => router.push('/savings')} />
-      <Row icon="calendar" label="购入日历" color={c.text} chevron={c.textTertiary} line={c.line} onPress={() => router.push('/calendar')} />
-      <Row
-        icon="arrow.counterclockwise"
-        label="恢复演示数据"
-        color={c.text}
-        chevron={c.textTertiary}
-        line={c.line}
-        onPress={() =>
-          showNativeSheet({
-            title: '恢复演示数据',
-            message: '当前数据会被覆盖。',
-            items: [{ label: '恢复', destructive: true, onPress: restoreDemo }],
-          })
-        }
-      />
-      <Row
-        icon="trash"
-        label="清空全部数据"
-        color={c.danger}
-        chevron={c.textTertiary}
-        line={c.line}
-        onPress={() =>
-          showNativeSheet({
-            title: '清空数据',
-            message: '所有资产、心愿和攒钱计划都会删除。',
-            items: [{ label: '清空', destructive: true, onPress: clearAll }],
-          })
-        }
-      />
+      <GroupedSection header="工具">
+        <GroupedRow
+          icon="leaf"
+          iconBg={LIME}
+          iconTint="#1C1C1E"
+          label="智能攒钱计划"
+          onPress={() => router.push('/savings')}
+        />
+        <GroupedRow
+          icon="calendar"
+          iconBg="#FF9500"
+          label="购入日历"
+          onPress={() => router.push('/calendar')}
+        />
+      </GroupedSection>
 
-      <Text style={[styles.foot, { color: c.textTertiary }]}>
-        衡物 · 本地资产账本{'\n'}买入 · 服役 · 退役 · 卖出，把每件物品放上秤
-      </Text>
-    </ScrollView>
+      <GroupedSection header="管理">
+        <GroupedRow
+          icon="square.grid.2x2"
+          iconBg="#007AFF"
+          label="分类"
+          onPress={() => router.push('/manage/categories')}
+        />
+        <GroupedRow
+          icon="tag"
+          iconBg="#AF52DE"
+          label="标签"
+          onPress={() => router.push('/manage/tags')}
+        />
+      </GroupedSection>
+
+      <GroupedSection header="数据" footer="衡物是本地资产账本。买入 · 服役 · 退役 · 卖出，把每件物品放上秤。">
+        <GroupedRow
+          icon="arrow.counterclockwise"
+          iconBg="#8E8E93"
+          label="恢复演示数据"
+          onPress={() =>
+            Alert.alert('恢复演示数据', '当前本地数据会被演示数据覆盖。', [
+              { text: '取消', style: 'cancel' },
+              { text: '确认恢复', style: 'destructive', onPress: restoreDemo },
+            ])
+          }
+        />
+        <GroupedRow
+          icon="trash.fill"
+          iconBg={c.danger}
+          label="清空全部数据"
+          destructive
+          onPress={() =>
+            Alert.alert('清空全部数据', '资产、心愿和攒钱计划都会被删除，且无法恢复。', [
+              { text: '取消', style: 'cancel' },
+              { text: '确认删除', style: 'destructive', onPress: clearAll },
+            ])
+          }
+        />
+      </GroupedSection>
+    </LargeTitleScreen>
   );
 }
 
 function Stat({ n, l, color, muted }: { n: number; l: string; color: string; muted: string }) {
   return (
-    <View style={{ flex: 1, alignItems: 'center' }}>
-      <Text style={{ fontSize: 22, fontWeight: '800', color }}>{n}</Text>
-      <Text style={{ fontSize: 12, color: muted, marginTop: 4 }}>{l}</Text>
+    <View style={styles.stat}>
+      <Text style={[styles.statN, { color }]}>{n}</Text>
+      <Text style={[styles.statL, { color: muted }]}>{l}</Text>
     </View>
   );
 }
 
-function Row({
-  icon,
-  label,
-  onPress,
-  color,
-  chevron,
-  line,
-}: {
-  icon: 'leaf' | 'calendar' | 'arrow.counterclockwise' | 'trash';
-  label: string;
-  onPress: () => void;
-  color: string;
-  chevron: string;
-  line: string;
-}) {
-  return (
-    <Pressable onPress={onPress} style={[styles.row, { borderBottomColor: line }]}>
-      <SymbolView name={icon} size={20} tintColor={color} />
-      <Text style={[styles.rowText, { color }]}>{label}</Text>
-      <SymbolView name="chevron.right" size={14} tintColor={chevron} />
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
-  root: { paddingHorizontal: 20, paddingBottom: 40 },
-  title: { fontSize: 28, fontWeight: '800', marginBottom: 16 },
-  hero: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 18 },
+  hero: {
+    minHeight: 76,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
   avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 22,
+    width: 56,
+    height: 56,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  name: { fontSize: 18, fontWeight: '800' },
-  meta: { marginTop: 4, fontSize: 13 },
+  avatarGlyph: { fontSize: 24, fontWeight: '800', color: '#1C1C1E' },
+  name: { fontSize: 17, fontWeight: '600' },
+  meta: { marginTop: 3, fontSize: 13 },
   stats: {
-    flexDirection: 'row',
-    borderRadius: radius.lg,
-    paddingVertical: 16,
-    marginBottom: 18,
-  },
-  row: {
+    minHeight: 72,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingVertical: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    minHeight: 52,
   },
-  rowText: { flex: 1, fontSize: 16, fontWeight: '600' },
-  foot: { marginTop: 28, textAlign: 'center', lineHeight: 20, fontSize: 12 },
+  stat: { flex: 1, alignItems: 'center', paddingVertical: 14 },
+  statN: { fontSize: 22, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  statL: { fontSize: 12, marginTop: 4 },
+  statRule: { width: StyleSheet.hairlineWidth, height: 36 },
 });

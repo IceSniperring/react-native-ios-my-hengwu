@@ -14,6 +14,7 @@ export function demoAssets(): Asset[] {
       expectedDays: 1140,
       imageKey: 'macbook',
       starred: true,
+      tags: ['主力'],
     },
     {
       id: 'a-iphone15',
@@ -26,6 +27,7 @@ export function demoAssets(): Asset[] {
       expectedDays: 776,
       imageKey: 'iphone',
       starred: true,
+      tags: ['主力'],
     },
     {
       id: 'a-watch',

@@ -23,8 +23,8 @@ import { HomeTabBar } from '../../src/home/HomeTabBar';
 import { styles } from '../../src/home/homeStyles';
 import { useStore } from '../../src/store';
 import { useColors } from '../../src/useColors';
+import { useSelectableCategories } from '../../src/catalog';
 import {
-  CATEGORIES,
   STATUS_FILTERS,
   type Asset,
   type AssetStatus,
@@ -35,6 +35,7 @@ export default function HomeScreen() {
   const c = useColors();
   const { width } = useWindowDimensions();
   const assets = useStore((s) => s.assets);
+  const catalog = useSelectableCategories();
   const overview = useOverview();
   const tabsRef = useRef<CollapsingTabsRef>(null);
   const collapseProgress = useSharedValue(0);
@@ -49,10 +50,9 @@ export default function HomeScreen() {
   const statusIndex = Math.max(0, STATUS_FILTERS.findIndex((s) => s.id === status));
 
   const cats = useMemo(() => {
-    return CATEGORIES.filter(
-      (cat) => cat.id === 'all' || assets.some((a) => a.category === cat.id),
-    );
-  }, [assets]);
+    const used = catalog.filter((cat) => assets.some((a) => a.category === cat.id));
+    return [{ id: 'all', label: '全部' }, ...used];
+  }, [assets, catalog]);
 
   const rowsByCat = useMemo(() => {
     const map: Record<string, Asset[][]> = {};

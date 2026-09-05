@@ -227,8 +227,8 @@ function TabLabel({
   index: number;
   pos?: SharedValue<number>;
 }) {
-  const selectedColor = scheme === 'dark' ? '#FFFFFF' : '#111111';
-  const idleColor = scheme === 'dark' ? '#8E8E93' : 'rgba(60,60,67,0.55)';
+  const selectedColor = scheme === 'dark' ? '#F2F2F7' : '#111111';
+  const idleColor = scheme === 'dark' ? '#A1A1A6' : 'rgba(60,60,67,0.55)';
   const color = on ? selectedColor : idleColor;
 
   // With a pager, two stacked copies crossfade on the UI thread so weight and
@@ -283,7 +283,7 @@ function CrossfadeLabel({
       <Animated.Text
         numberOfLines={1}
         accessibilityElementsHidden
-        style={[styles.label, styles.labelBold, { color: selectedColor }, boldStyle]}>
+        style={[styles.label, styles.labelBold, { color: selectedColor, fontWeight: '900' }, boldStyle]}>
         {label}
       </Animated.Text>
     </View>

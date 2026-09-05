@@ -66,10 +66,33 @@ export default function RootLayout() {
         <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="asset/[id]" options={{ ...nativeHeader, title: '资产详情' }} />
+        <Stack.Screen
+          name="asset/[id]"
+          options={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}
+        />
         <Stack.Screen
           name="asset/form"
-          options={{ ...nativeHeader, presentation: 'modal', title: '录入资产' }}
+          options={{
+            headerShown: false,
+            presentation: 'modal',
+            contentStyle: { backgroundColor: c.bg },
+          }}
+        />
+        <Stack.Screen
+          name="pick/tags"
+          options={{
+            headerShown: false,
+            presentation: 'modal',
+            contentStyle: { backgroundColor: c.bg },
+          }}
+        />
+        <Stack.Screen
+          name="pick/category"
+          options={{
+            headerShown: false,
+            presentation: 'modal',
+            contentStyle: { backgroundColor: c.bg },
+          }}
         />
         <Stack.Screen
           name="asset/sell"
@@ -89,6 +112,8 @@ export default function RootLayout() {
         />
         <Stack.Screen name="savings" options={{ ...nativeHeader, title: '智能攒钱' }} />
         <Stack.Screen name="calendar" options={{ ...nativeHeader, title: '购入日历' }} />
+        <Stack.Screen name="manage/categories" options={{ ...nativeHeader, title: '分类' }} />
+        <Stack.Screen name="manage/tags" options={{ ...nativeHeader, title: '标签' }} />
         </Stack>
       </ThemeProvider>
     </GestureHandlerRootView>
