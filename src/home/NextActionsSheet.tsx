@@ -49,10 +49,12 @@ type ResultPayload = {
 type Props = {
   visible: boolean;
   action: NextActionKind | null;
+  /** Prefill asset picker when opened from recommended CTA. */
+  preferredAssetId?: string;
   onClose: () => void;
 };
 
-export function NextActionsSheet({ visible, action, onClose }: Props) {
+export function NextActionsSheet({ visible, action, preferredAssetId, onClose }: Props) {
   const c = useColors();
   const assets = useStore((s) => s.assets);
   const addAsset = useStore((s) => s.addAsset);
@@ -93,16 +95,28 @@ export function NextActionsSheet({ visible, action, onClose }: Props) {
 
     if (action === 'status') {
       const prefer =
-        statusCandidates.find((a) => a.status === 'active') ?? statusCandidates[0] ?? null;
+        (preferredAssetId
+          ? statusCandidates.find((a) => a.id === preferredAssetId)
+          : null) ??
+        statusCandidates.find((a) => a.status === 'active') ??
+        statusCandidates[0] ??
+        null;
       setAssetId(prefer?.id ?? null);
     } else if (action === 'sell') {
       const prefer =
+        (preferredAssetId
+          ? sellCandidates.find((a) => a.id === preferredAssetId)
+          : null) ??
         sellCandidates.find((a) => a.status === 'active' || a.status === 'retired') ??
         sellCandidates[0] ??
         null;
       setAssetId(prefer?.id ?? null);
       if (prefer) {
-        setSellPrice(String(Math.round(prefer.purchasePrice * 0.6)));
+        const seeded =
+          typeof prefer.soldPrice === 'number' && prefer.soldPrice > 0
+            ? prefer.soldPrice
+            : Math.round(prefer.purchasePrice * 0.6);
+        setSellPrice(String(seeded));
       } else {
         setSellPrice('');
       }
@@ -110,11 +124,15 @@ export function NextActionsSheet({ visible, action, onClose }: Props) {
       setAssetId(null);
       setSellPrice('');
     }
-  }, [visible, action]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [visible, action, preferredAssetId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (action !== 'sell' || !selected) return;
-    setSellPrice(String(Math.round(selected.purchasePrice * 0.6)));
+    const seeded =
+      typeof selected.soldPrice === 'number' && selected.soldPrice > 0
+        ? selected.soldPrice
+        : Math.round(selected.purchasePrice * 0.6);
+    setSellPrice(String(seeded));
   }, [action, selected?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const meta = action ? NEXT_ACTION_META[action] : null;

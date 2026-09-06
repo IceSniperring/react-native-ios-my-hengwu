@@ -1,147 +1,195 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { LEMON } from '../theme';
+import { useStore } from '../store';
 import { useColors } from '../useColors';
 import {
   NEXT_ACTION_META,
   NextActionsSheet,
   type NextActionKind,
 } from './NextActionsSheet';
-
-const ACTIONS: NextActionKind[] = ['supplement', 'status', 'sell'];
+import {
+  recommendNextAction,
+  type RecommendScene,
+} from './recommendNextAction';
 
 /**
- * PR③: 下一步动作入口 — 点 CTA / 三动作条打开 Confirm Sheet，
- * 执行后写 store，总览净资产自动刷新。
+ * PR④: 同屏只推 1 个主 CTA + 其余收进「更多」。
+ * Sheet 确认→结果→完成复用 NextActionsSheet；禁止「调仓」。
  */
 export function NextStepPlaceholder() {
   const c = useColors();
   const schemeDark = c.bg === '#000000';
+  const assets = useStore((s) => s.assets);
+
+  const [scene, setScene] = useState<RecommendScene>('auto');
+  const [moreOpen, setMoreOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [action, setAction] = useState<NextActionKind | null>(null);
-  /** CTA 先选动作，再进入对应 Sheet */
-  const [picking, setPicking] = useState(false);
+  const [focusAssetId, setFocusAssetId] = useState<string | undefined>();
 
-  const openAction = (kind: NextActionKind) => {
-    setPicking(false);
+  const rec = useMemo(
+    () => recommendNextAction(assets, scene === 'auto' ? 'auto' : scene),
+    [assets, scene],
+  );
+  const primaryMeta = NEXT_ACTION_META[rec.primary];
+
+  const openAction = (kind: NextActionKind, assetId?: string) => {
+    setMoreOpen(false);
     setAction(kind);
+    setFocusAssetId(assetId);
     setOpen(true);
   };
 
-  const openPicker = () => {
-    setAction(null);
-    setOpen(false);
-    setPicking(true);
-  };
+  const openPrimary = () => openAction(rec.primary, rec.focusAssetId);
 
   return (
     <View style={styles.wrap}>
+      {__DEV__ ? (
+        <View style={styles.sceneRow}>
+          {(
+            [
+              { id: 'auto' as const, lab: '自动' },
+              { id: 'A' as const, lab: '缺字段' },
+              { id: 'B' as const, lab: '该退役' },
+              { id: 'C' as const, lab: '有回笼价' },
+            ] as const
+          ).map((s) => {
+            const on = scene === s.id;
+            return (
+              <Pressable
+                key={s.id}
+                onPress={() => {
+                  setScene(s.id);
+                  setMoreOpen(false);
+                }}
+                accessibilityRole="button"
+                accessibilityState={{ selected: on }}
+                style={[
+                  styles.sceneChip,
+                  {
+                    backgroundColor: on ? c.lemonSoft : c.surface,
+                    borderColor: on ? LEMON : c.line,
+                  },
+                ]}>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontWeight: on ? '700' : '500',
+                    color: c.text,
+                  }}>
+                  {s.lab}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : null}
+
+      {/* 主 CTA：大按钮 + 理由文案 */}
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="下一步该做什么？"
-        onPress={openPicker}
+        accessibilityLabel={`${primaryMeta.lab}：${rec.reason}`}
+        onPress={openPrimary}
         style={({ pressed }) => [
-          styles.cta,
-          schemeDark
-            ? { backgroundColor: '#1A2408' }
-            : { backgroundColor: '#EAF8A8' },
-          pressed && { opacity: 0.88 },
+          styles.primary,
+          {
+            backgroundColor: schemeDark ? '#1A2408' : '#EAF8A8',
+            opacity: pressed ? 0.88 : 1,
+          },
         ]}>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.title, { color: schemeDark ? '#EAF8A8' : '#111111' }]}>
-            下一步该做什么？
+        <View style={styles.primaryTop}>
+          <Text style={[styles.primaryIco, { color: schemeDark ? '#EAF8A8' : '#111' }]}>
+            {primaryMeta.ico}
           </Text>
-          <Text
+          <View style={{ flex: 1 }}>
+            <Text
+              style={[
+                styles.primaryLab,
+                { color: schemeDark ? '#EAF8A8' : '#111111' },
+              ]}>
+              {primaryMeta.lab}
+            </Text>
+            <Text
+              style={[
+                styles.whyNow,
+                {
+                  color: schemeDark
+                    ? 'rgba(234,248,168,0.75)'
+                    : 'rgba(17,17,17,0.65)',
+                },
+              ]}>
+              {rec.whyNow}
+            </Text>
+          </View>
+          <View
             style={[
-              styles.desc,
-              { color: schemeDark ? 'rgba(234,248,168,0.7)' : 'rgba(17,17,17,0.7)' },
+              styles.go,
+              {
+                backgroundColor: schemeDark
+                  ? 'rgba(255,255,255,0.12)'
+                  : 'rgba(0,0,0,0.12)',
+              },
             ]}>
-            补录 · 服役·退役 · 卖出
-          </Text>
+            <Text style={{ color: schemeDark ? '#EAF8A8' : '#111', fontSize: 16 }}>→</Text>
+          </View>
         </View>
-        <View
+        <Text
           style={[
-            styles.go,
+            styles.reason,
             {
-              backgroundColor: schemeDark
-                ? 'rgba(255,255,255,0.12)'
-                : 'rgba(0,0,0,0.12)',
+              color: schemeDark
+                ? 'rgba(234,248,168,0.85)'
+                : 'rgba(17,17,17,0.78)',
             },
           ]}>
-          <Text style={{ color: schemeDark ? '#EAF8A8' : '#111', fontSize: 16 }}>→</Text>
-        </View>
+          {rec.reason}
+        </Text>
       </Pressable>
 
-      <View style={styles.bar}>
-        {ACTIONS.map((kind) => {
-          const item = NEXT_ACTION_META[kind];
-          return (
-            <Pressable
-              key={kind}
-              accessibilityRole="button"
-              accessibilityLabel={item.lab}
-              onPress={() => openAction(kind)}
-              style={({ pressed }) => [
-                styles.chip,
-                { backgroundColor: c.surface },
-                pressed && { opacity: 0.72 },
-              ]}>
-              <Text style={[styles.ico, { color: c.text }]}>{item.ico}</Text>
-              <Text style={[styles.lab, { color: c.text }]}>{item.lab}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      {/* 更多：弱入口，展开另两个动作 */}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={moreOpen ? '收起更多动作' : '更多动作'}
+        onPress={() => setMoreOpen((v) => !v)}
+        style={styles.moreToggle}>
+        <Text style={{ color: c.textSecondary, fontSize: 13, fontWeight: '600' }}>
+          {moreOpen ? '收起' : '更多'} {moreOpen ? '▴' : '▾'}
+        </Text>
+      </Pressable>
 
-      {/* CTA → 轻量动作选择（非第四屏） */}
-      {picking ? (
-        <View
-          style={[
-            styles.pickerCard,
-            { backgroundColor: c.surface, borderColor: c.line },
-          ]}>
-          <Text style={[styles.pickerTitle, { color: c.text }]}>选一个下一步</Text>
-          {ACTIONS.map((kind) => {
+      {moreOpen ? (
+        <View style={styles.moreBar}>
+          {rec.secondaries.map((kind) => {
             const item = NEXT_ACTION_META[kind];
             return (
               <Pressable
                 key={kind}
+                accessibilityRole="button"
+                accessibilityLabel={item.lab}
                 onPress={() => openAction(kind)}
                 style={({ pressed }) => [
-                  styles.pickerRow,
-                  { borderBottomColor: c.line },
+                  styles.moreChip,
+                  { backgroundColor: c.surface, borderColor: c.line },
                   pressed && { opacity: 0.72 },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={item.lab}>
-                <Text style={[styles.ico, { color: c.text, marginBottom: 0 }]}>
-                  {item.ico}
-                </Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.pickerLab, { color: c.text }]}>{item.lab}</Text>
-                  <Text style={[styles.pickerHint, { color: c.textSecondary }]}>
-                    {item.hint}
-                  </Text>
-                </View>
-                <Text style={{ color: c.textTertiary }}>›</Text>
+                ]}>
+                <Text style={[styles.moreIco, { color: c.textSecondary }]}>{item.ico}</Text>
+                <Text style={[styles.moreLab, { color: c.textSecondary }]}>{item.lab}</Text>
               </Pressable>
             );
           })}
-          <Pressable
-            onPress={() => setPicking(false)}
-            style={styles.pickerCancel}
-            accessibilityRole="button">
-            <Text style={{ color: c.textSecondary, fontSize: 14 }}>收起</Text>
-          </Pressable>
         </View>
       ) : null}
 
       <NextActionsSheet
         visible={open}
         action={action}
+        preferredAssetId={focusAssetId}
         onClose={() => {
           setOpen(false);
           setAction(null);
+          setFocusAssetId(undefined);
         }}
       />
     </View>
@@ -150,17 +198,30 @@ export function NextStepPlaceholder() {
 
 const styles = StyleSheet.create({
   wrap: { marginTop: 8, marginBottom: 4 },
-  cta: {
-    marginHorizontal: 0,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+  sceneRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginBottom: 10,
+  },
+  sceneChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  primary: {
     borderRadius: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+  },
+  primaryTop: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
-  title: { fontSize: 15, fontWeight: '700' },
-  desc: { marginTop: 2, fontSize: 12 },
+  primaryIco: { fontSize: 22, fontWeight: '700' },
+  primaryLab: { fontSize: 17, fontWeight: '700' },
+  whyNow: { marginTop: 2, fontSize: 12, fontWeight: '600' },
   go: {
     width: 32,
     height: 32,
@@ -168,42 +229,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  bar: {
+  reason: {
+    marginTop: 12,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '500',
+  },
+  moreToggle: {
+    alignSelf: 'flex-start',
     marginTop: 10,
+    paddingVertical: 4,
+    paddingHorizontal: 2,
+  },
+  moreBar: {
+    marginTop: 6,
     flexDirection: 'row',
     gap: 8,
   },
-  chip: {
+  moreChip: {
     flex: 1,
     borderRadius: 14,
-    paddingVertical: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingVertical: 10,
     paddingHorizontal: 8,
     alignItems: 'center',
+    opacity: 0.92,
   },
-  ico: { fontSize: 18, marginBottom: 4 },
-  lab: { fontSize: 12, fontWeight: '600' },
-  pickerCard: {
-    marginTop: 10,
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
-    overflow: 'hidden',
-  },
-  pickerTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    paddingHorizontal: 14,
-    paddingTop: 12,
-    paddingBottom: 4,
-  },
-  pickerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  pickerLab: { fontSize: 15, fontWeight: '600' },
-  pickerHint: { marginTop: 2, fontSize: 12, lineHeight: 16 },
-  pickerCancel: { alignItems: 'center', paddingVertical: 12 },
+  moreIco: { fontSize: 16, marginBottom: 2 },
+  moreLab: { fontSize: 12, fontWeight: '600' },
 });
