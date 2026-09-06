@@ -6,6 +6,7 @@ import { Tabs } from 'react-native-collapsible-tab';
 import { AssetCard } from '../components/AssetCard';
 import { useColors } from '../useColors';
 import type { Asset } from '../types';
+import { NextStepPlaceholder } from './NextStepPlaceholder';
 
 export const CategoryPage = memo(function CategoryPage({
   rows,
@@ -13,12 +14,15 @@ export const CategoryPage = memo(function CategoryPage({
   gap,
   pad,
   bottomPad,
+  showNextStep,
 }: {
   rows: Asset[][];
   cardW: number;
   gap: number;
   pad: number;
   bottomPad: number;
+  /** Only the "全部" tab shows the PR③ placeholder strip. */
+  showNextStep?: boolean;
 }) {
   const c = useColors();
 
@@ -62,6 +66,11 @@ export const CategoryPage = memo(function CategoryPage({
               {row.length === 1 ? <View style={{ width: cardW }} /> : null}
             </View>
           ))}
+          {showNextStep ? (
+            <View style={{ marginTop: 12 }}>
+              <NextStepPlaceholder />
+            </View>
+          ) : null}
         </View>
       )}
       {/* Clears the floating tab bar for long lists. Short lists still only
