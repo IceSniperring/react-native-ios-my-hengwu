@@ -3,6 +3,9 @@ export type ColorScheme = 'light' | 'dark';
 /** Brand lime — tab bar selected only (designer lock) */
 export const LIME = '#A9D62E';
 
+/** MVP lemon-green accent (overview underline / ingress CTA) */
+export const LEMON = '#C8F04D';
+
 export const palettes = {
   light: {
     tint: '#007AFF',
@@ -16,6 +19,8 @@ export const palettes = {
     purple: '#AF52DE',
     lime: LIME,
     limeDark: '#607D0B',
+    lemon: LEMON,
+    lemonSoft: 'rgba(200,240,77,0.55)',
     bg: '#F2F2F7',
     surface: '#FFFFFF',
     card: '#FFFFFF',
@@ -25,16 +30,18 @@ export const palettes = {
     chipSelectedText: '#FFFFFF',
     line: '#E5E5EA',
     track: '#E5E5EA',
-    text: '#111111',
+    text: '#000000',
     textSecondary: '#8E8E93',
     textTertiary: '#AEAEB2',
-    headerText: '#111111',
+    headerText: '#000000',
     tabInactive: '#8E8E93',
     tabSelected: LIME,
     danger: '#FF3B30',
     success: '#34C759',
     imageBg: '#F2F2F7',
     badgeBg: 'rgba(255,255,255,0.92)',
+    green: '#34C759',
+    gray: '#8E8E93',
   },
   dark: {
     tint: '#0A84FF',
@@ -48,7 +55,9 @@ export const palettes = {
     purple: '#BF5AF2',
     lime: LIME,
     limeDark: '#C8F04D',
-    bg: '#161618',
+    lemon: LEMON,
+    lemonSoft: 'rgba(200,240,77,0.40)',
+    bg: '#000000',
     surface: '#1C1C1E',
     card: '#2C2C2E',
     input: '#3A3A3C',
@@ -57,16 +66,18 @@ export const palettes = {
     chipSelectedText: '#1C1C1E',
     line: '#3A3A3C',
     track: '#48484A',
-    text: '#F2F2F7',
+    text: '#FFFFFF',
     textSecondary: '#A1A1A6',
     textTertiary: '#8E8E93',
-    headerText: '#F2F2F7',
+    headerText: '#FFFFFF',
     tabInactive: '#8E8E93',
     tabSelected: LIME,
     danger: '#FF453A',
     success: '#30D158',
     imageBg: '#3A3A3C',
     badgeBg: 'rgba(44,44,46,0.92)',
+    green: '#30D158',
+    gray: '#8E8E93',
   },
 } as const;
 
@@ -81,6 +92,12 @@ export const radius = {
   lg: 22,
   xl: 26,
   pill: 999,
+};
+
+export const space = {
+  /** Horizontal page padding — design 16/20 */
+  pageX: 16,
+  pageXWide: 20,
 };
 
 export const shadow = {

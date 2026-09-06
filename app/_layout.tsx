@@ -67,6 +67,30 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
+          name="ingress/index"
+          options={{
+            headerShown: false,
+            presentation: 'modal',
+            contentStyle: { backgroundColor: c.bg },
+          }}
+        />
+        <Stack.Screen
+          name="ingress/csv"
+          options={{
+            headerShown: false,
+            presentation: 'modal',
+            contentStyle: { backgroundColor: c.bg },
+          }}
+        />
+        <Stack.Screen
+          name="ingress/confirm"
+          options={{
+            headerShown: false,
+            presentation: 'modal',
+            contentStyle: { backgroundColor: c.bg },
+          }}
+        />
+        <Stack.Screen
           name="asset/[id]"
           options={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}
         />

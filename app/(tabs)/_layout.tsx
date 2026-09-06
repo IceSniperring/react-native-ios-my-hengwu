@@ -75,11 +75,11 @@ export default function TabLayout() {
         hidden={Platform.OS !== 'ios'}
         disabled
         contentStyle={screenBg}
-        accessibilityLabel={onWishlist ? '添加心愿' : '添加物品'}
+        accessibilityLabel={onWishlist ? '添加心愿' : '入账'}
         listeners={{
           tabPress: () => {
             if (onWishlistRef.current) router.push('/asset/form?kind=wish');
-            else router.push('/asset/form');
+            else router.push('/ingress');
           },
         }}>
         <NativeTabs.Trigger.Label hidden>添加</NativeTabs.Trigger.Label>

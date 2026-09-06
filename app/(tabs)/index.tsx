@@ -141,7 +141,7 @@ export default function HomeScreen() {
           </Tabs.Tab>
         ))}
       </Tabs.Container>
-      <AddFab accessibilityLabel="添加物品" onPress={() => router.push('/asset/form')} />
+      <AddFab accessibilityLabel="添加物品" onPress={() => router.push('/ingress')} />
     </GestureHandlerRootView>
   );
 }

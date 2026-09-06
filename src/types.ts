@@ -41,6 +41,19 @@ export interface Asset {
   targetMode?: 'none' | 'price' | 'date' | 'custom';
 }
 
+/** Editable draft row on ingress confirm screen (before writing store). */
+export type IngressSource = 'shot' | 'csv' | 'one';
+
+export interface IngressDraft {
+  key: string;
+  name: string;
+  purchasePrice: number;
+  category: string;
+  purchaseDate: string;
+  note?: string;
+  source?: IngressSource;
+}
+
 export interface WishItem {
   id: string;
   name: string;
