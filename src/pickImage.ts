@@ -7,10 +7,15 @@ async function toSticker(uri: string) {
   return out;
 }
 
+export type MediaPickFailure = 'denied' | 'canceled';
+export type MediaPickResult =
+  | { ok: true; uri: string }
+  | { ok: false; reason: MediaPickFailure };
+
+/** Asset icon: stickerize subject. */
 export async function pickAssetImage() {
   const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!perm.granted) return null;
-  // No square crop — full frame helps Vision find the subject.
   const res = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ['images'],
     quality: 0.9,
@@ -29,4 +34,17 @@ export async function takeAssetPhoto() {
   });
   if (res.canceled || !res.assets[0]) return null;
   return toSticker(res.assets[0].uri);
+}
+
+/** Bill / holdings screenshot for ingress — keep full frame, no stickerize. */
+export async function pickIngressScreenshot(): Promise<MediaPickResult> {
+  const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!perm.granted) return { ok: false, reason: 'denied' };
+  const res = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images'],
+    quality: 0.9,
+    allowsEditing: false,
+  });
+  if (res.canceled || !res.assets[0]) return { ok: false, reason: 'canceled' };
+  return { ok: true, uri: res.assets[0].uri };
 }
