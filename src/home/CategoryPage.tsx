@@ -21,7 +21,7 @@ export const CategoryPage = memo(function CategoryPage({
   gap: number;
   pad: number;
   bottomPad: number;
-  /** Only the "全部" tab shows the next-step actions strip (PR³ Sheet). */
+  /** Only the "全部" tab shows the next-step actions strip (PR③ Sheet). */
   showNextStep?: boolean;
 }) {
   const c = useColors();
