@@ -52,7 +52,7 @@ export function AssetCard({ asset, onPress, size }: Props) {
           )}
         </View>
         <View style={[styles.badge, { backgroundColor: badgeBg }]}>
-          <View style={[styles.dot, { backgroundColor: statusColor(asset.status) }]} />
+          <View style={[styles.dot, { backgroundColor: statusColor(asset.status, scheme) }]} />
           <Text style={[styles.badgeText, { color: c.text }]}>{STATUS_LABEL[asset.status]}</Text>
         </View>
       </View>
@@ -126,11 +126,11 @@ const styles = StyleSheet.create({
   },
   dot: { width: 6, height: 6, borderRadius: 3 },
   badgeText: { fontSize: 11, fontWeight: '600' },
-  name: { marginTop: 10, fontSize: 15, fontWeight: '600' },
+  name: { marginTop: 10, fontSize: 17, fontWeight: '600' },
   meta: { marginTop: 4, fontSize: 12, fontWeight: '400' },
   footer: { flex: 1, justifyContent: 'flex-end' },
   costRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
-  daily: { fontSize: 18, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  daily: { fontSize: 17, fontWeight: '600', fontVariant: ['tabular-nums'] },
   progressValue: { fontSize: 11, fontWeight: '800', fontVariant: ['tabular-nums'] },
   progressTrack: { height: 6, marginTop: 7, borderRadius: 999 },
   progressFill: { height: '100%', borderRadius: 999 },
