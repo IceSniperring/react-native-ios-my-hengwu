@@ -1,5 +1,4 @@
 import type { Asset, AssetStatus } from './types';
-import { LIME } from './theme';
 
 export function startOfDay(d: Date) {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -116,8 +115,9 @@ export function dailyCostHistory(asset: Asset, points = 6) {
   return data;
 }
 
-export function statusColor(status: AssetStatus) {
-  if (status === 'active') return LIME;
-  if (status === 'retired') return '#FF9500';
+export function statusColor(status: AssetStatus, scheme: 'light' | 'dark' = 'light') {
+  // MVP tokens: green / orange / gray (tab lime is separate)
+  if (status === 'active') return scheme === 'dark' ? '#30D158' : '#34C759';
+  if (status === 'retired') return scheme === 'dark' ? '#FF9F0A' : '#FF9500';
   return '#8E8E93';
 }
