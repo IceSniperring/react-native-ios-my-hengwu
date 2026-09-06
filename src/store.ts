@@ -20,7 +20,15 @@ const safeStorage = {
 };
 
 import { demoAssets, demoPlans, demoWishes } from './seed';
-import { isBuiltinCategory, mergeCategories, type Asset, type CatalogItem, type SavingsPlan, type WishItem } from './types';
+import {
+  isBuiltinCategory,
+  mergeCategories,
+  type Asset,
+  type CatalogItem,
+  type IngressDraft,
+  type SavingsPlan,
+  type WishItem,
+} from './types';
 
 function uid(prefix: string) {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
@@ -34,9 +42,17 @@ type State = {
   plans: SavingsPlan[];
   customCategories: CatalogItem[];
   tagLibrary: string[];
+  /** Ephemeral ingress confirm drafts — not persisted */
+  ingressDrafts: IngressDraft[];
+  ingressMeta: { title: string; badge: string } | null;
   setHydrated: () => void;
   setColorScheme: (scheme: ColorScheme) => void;
+  setIngressDrafts: (drafts: IngressDraft[], meta?: { title: string; badge: string } | null) => void;
+  updateIngressDraft: (key: string, patch: Partial<IngressDraft>) => void;
+  removeIngressDraft: (key: string) => void;
+  clearIngressDrafts: () => void;
   addAsset: (asset: Omit<Asset, 'id'> & { id?: string }) => string;
+  addAssets: (assets: Array<Omit<Asset, 'id'> & { id?: string }>) => string[];
   updateAsset: (id: string, patch: Partial<Asset>) => void;
   removeAsset: (id: string) => void;
   addWish: (wish: Omit<WishItem, 'id'> & { id?: string }) => string;
@@ -75,11 +91,26 @@ export const useStore = create<State>()(
       plans: demoPlans(),
       customCategories: [],
       tagLibrary: ['主力', '配件', '礼物'],
+      ingressDrafts: [],
+      ingressMeta: null,
       setHydrated: () => set({ hydrated: true }),
+      setIngressDrafts: (drafts, meta = null) => set({ ingressDrafts: drafts, ingressMeta: meta }),
+      updateIngressDraft: (key, patch) =>
+        set({
+          ingressDrafts: get().ingressDrafts.map((d) => (d.key === key ? { ...d, ...patch } : d)),
+        }),
+      removeIngressDraft: (key) =>
+        set({ ingressDrafts: get().ingressDrafts.filter((d) => d.key !== key) }),
+      clearIngressDrafts: () => set({ ingressDrafts: [], ingressMeta: null }),
       addAsset: (asset) => {
         const id = asset.id ?? uid('a');
         set({ assets: [{ ...asset, id }, ...get().assets] });
         return id;
+      },
+      addAssets: (assets) => {
+        const created = assets.map((asset) => ({ ...asset, id: asset.id ?? uid('a') }));
+        set({ assets: [...created, ...get().assets] });
+        return created.map((a) => a.id);
       },
       updateAsset: (id, patch) =>
         set({
@@ -187,6 +218,8 @@ export const useStore = create<State>()(
           ...p,
           customCategories: p.customCategories ?? [],
           tagLibrary: p.tagLibrary ?? [],
+          ingressDrafts: [],
+          ingressMeta: null,
         };
       },
       onRehydrateStorage: () => () => useStore.getState().setHydrated(),
