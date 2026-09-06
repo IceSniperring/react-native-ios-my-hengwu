@@ -11,6 +11,7 @@ import { styles } from './homeStyles';
 
 type Overview = {
   total: number;
+  holdingCost: number;
   daily: number;
   active: number;
   retired: number;
@@ -41,17 +42,19 @@ export function HomeHeader({
   return (
     <View style={{ paddingHorizontal: 16, paddingTop: 4, backgroundColor: c.bg }}>
       <CollapseBridge target={collapseProgress} />
-      <Text style={[styles.brand, { color: c.text }]}>衡物</Text>
+      <Text style={[styles.brand, { color: c.text }]}>有数</Text>
       <View style={{ paddingTop: 12 }}>
         <OverviewCard
           total={overview.total}
+          holdingCost={overview.holdingCost}
           daily={overview.daily}
           active={overview.active}
           retired={overview.retired}
           sold={overview.sold}
         />
       </View>
-      <View style={{ height: 14 }} />
+      {/* Stamp → Tab spacing: 18px (prototype --tab-to-card-gap) */}
+      <View style={{ height: 18 }} />
     </View>
   );
 }

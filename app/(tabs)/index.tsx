@@ -88,11 +88,12 @@ export default function HomeScreen() {
       <HomeTabBar
         {...props}
         cats={cats}
+        shares={overview.shares}
         statusIndex={statusIndex}
         onStatusChange={onStatusChange}
       />
     ),
-    [cats, statusIndex, onStatusChange],
+    [cats, overview.shares, statusIndex, onStatusChange],
   );
 
   return (
@@ -101,7 +102,7 @@ export default function HomeScreen() {
         <View style={styles.topRow}>
           <Pressable hitSlop={12} onPress={expandHeader} style={styles.titlePress}>
             <Animated.Text style={[styles.compactTitle, { color: c.text }, compactTitleStyle]}>
-              衡物
+              有数
             </Animated.Text>
           </Pressable>
           <View style={styles.topActions}>
@@ -137,6 +138,7 @@ export default function HomeScreen() {
               gap={gap}
               pad={pad}
               bottomPad={bottomPad}
+              showNextStep={cat.id === 'all'}
             />
           </Tabs.Tab>
         ))}

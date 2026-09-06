@@ -18,6 +18,7 @@ import Animated, {
 import Svg, { Path } from 'react-native-svg';
 import { swipeCategory } from '../homeUi';
 import { useStore } from '../store';
+import { useColors } from '../useColors';
 
 type Item = { id: string; label: string };
 type TabLayout = { x: number; y: number; width: number; height: number };
@@ -40,9 +41,8 @@ const TRACK_SPRING = {
   overshootClamping: true,
 };
 
-/** Highlighter stroke sitting across the glyph feet of the active label. */
-const MARKER_FILL = 'rgba(169, 214, 46, 0.85)';
-const MARKER_HEIGHT = 12;
+/** Soft lemon bar under the active label (prototype --lemon-soft). */
+const MARKER_HEIGHT = 8;
 /**
  * Hand-drawn chisel stroke in a 100 × 12 design space: puffy bowed edges and
  * slanted ends. The marker view keeps this aspect locked while its width is
@@ -54,6 +54,7 @@ const MARKER_PATH =
 
 export function FilterTabs({ items, selected, onSelect, pageOffset, onRequestPage }: Props) {
   const scheme = useStore((s) => s.colorScheme);
+  const c = useColors();
   const [layouts, setLayouts] = useState<Record<string, TabLayout>>({});
   const scrollRef = useRef<ScrollView>(null);
   const chipX = useSharedValue(0);
@@ -80,8 +81,8 @@ export function FilterTabs({ items, selected, onSelect, pageOffset, onRequestPag
       if (!layout) return;
       X.push(layout.x - 3);
       W.push(layout.width + 6);
-      // Bar top so the ink band lands across the glyph feet.
-      Y.push(layout.y + layout.height - 17);
+      // Soft lemon underline sits under glyph feet (manga highlight).
+      Y.push(layout.y + layout.height - 14);
       H.push(MARKER_HEIGHT);
     }
     xs.value = X;
@@ -95,7 +96,7 @@ export function FilterTabs({ items, selected, onSelect, pageOffset, onRequestPag
     if (!layout) return;
     const w = layout.width + 6;
     const x = layout.x - 3;
-    const y = layout.y + layout.height - 17;
+    const y = layout.y + layout.height - 14;
     const h = MARKER_HEIGHT;
     chipX.value = withSpring(x, SPRING);
     chipW.value = withSpring(w, SPRING);
@@ -183,7 +184,7 @@ export function FilterTabs({ items, selected, onSelect, pageOffset, onRequestPag
         {/* Rendered before the labels so the active text paints over the highlighter. */}
         <Animated.View pointerEvents="none" style={[styles.marker, barStyle]}>
           <Svg width="100%" height="100%" viewBox="0 0 100 12" preserveAspectRatio="none">
-            <Path d={MARKER_PATH} fill={MARKER_FILL} />
+            <Path d={MARKER_PATH} fill={c.lemonSoft} />
           </Svg>
         </Animated.View>
         {items.map((item, index) => {
@@ -302,7 +303,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 7,
-    gap: 22,
+    gap: 20,
     position: 'relative',
     overflow: 'visible',
   },

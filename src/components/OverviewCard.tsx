@@ -3,59 +3,69 @@ import { StyleSheet, Text, View, type DimensionValue } from 'react-native';
 import Svg, { Line, Path } from 'react-native-svg';
 
 import { formatMoney } from '../calc';
-import { LIME } from '../theme';
 import { useStore } from '../store';
 import { useColors } from '../useColors';
 
 type Props = {
   total: number;
+  holdingCost: number;
   daily: number;
   active: number;
   retired: number;
   sold: number;
 };
 
-/** Reference-matched overview: rounded card, pill count, dashed rule, single segmented track. */
-export function OverviewCard({ total, daily, active, retired, sold }: Props) {
+/** MVP overview stamp: r24, big net-worth, cost metrics, green/orange/gray bars. */
+export function OverviewCard({ total, holdingCost, daily, active, retired, sold }: Props) {
   const c = useColors();
   const scheme = useStore((s) => s.colorScheme);
   const totalCount = active + retired + sold;
   const sum = totalCount || 1;
-  const paper = c.card;
+  const paper = c.surface;
   const dashColor = scheme === 'dark' ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.12)';
   const pillBg = scheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)';
+  const insetBorder = scheme === 'dark' ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.12)';
 
   return (
     <View style={[styles.card, { backgroundColor: paper }]}>
+      <View pointerEvents="none" style={[styles.insetDash, { borderColor: insetBorder }]} />
+      <Text pointerEvents="none" style={[styles.watermark, { color: c.lemon }]}>
+        有数
+      </Text>
+
       <View style={styles.topRow}>
         <Text style={[styles.kicker, { color: c.textSecondary }]}>资产总览</Text>
         <View style={[styles.pill, { backgroundColor: pillBg }]}>
           <Text style={[styles.pillText, { color: c.textTertiary }]}>
-            {active}/{totalCount}
+            {totalCount} 件 · 服役 {active}
           </Text>
         </View>
       </View>
 
+      <View style={styles.netWorth}>
+        <Text style={[styles.label, { color: c.textSecondary }]}>总净资产</Text>
+        <Text style={[styles.netValue, { color: c.text }]}>{formatMoney(total, 0)}</Text>
+      </View>
+
       <View style={styles.metrics}>
         <View style={{ flex: 1, paddingRight: 8 }}>
-          <Text style={[styles.label, { color: c.textSecondary }]}>总资产</Text>
-          <Text style={[styles.value, { color: c.text }]}>{formatMoney(total)}</Text>
+          <Text style={[styles.label, { color: c.textSecondary }]}>持有成本</Text>
+          <Text style={[styles.metricValue, { color: c.text }]}>{formatMoney(holdingCost, 0)}</Text>
         </View>
         <View style={{ flex: 1, alignItems: 'flex-end' }}>
           <Text style={[styles.label, { color: c.textSecondary }]}>日均成本</Text>
-          <Text style={[styles.value, { color: c.text }]}>{formatMoney(daily)}</Text>
+          <Text style={[styles.metricValue, { color: c.text }]}>{formatMoney(daily)}</Text>
         </View>
       </View>
 
       <DashedRule color={dashColor} notchColor={c.bg} />
 
-      {/* Three independent columns, each with its own label and share bar. */}
       <View style={styles.statusRow}>
         <StatusColumn
           label="服役中"
           count={active}
           ratio={active / sum}
-          fill={LIME}
+          fill={c.statusActive}
           track={c.track}
           labelColor={c.textSecondary}
         />
@@ -82,9 +92,6 @@ export function OverviewCard({ total, daily, active, retired, sold }: Props) {
 
 function DashedRule({ color, notchColor }: { color: string; notchColor: string }) {
   const [w, setW] = useState(0);
-  // Box is w × 18 with the dash centreline at y = 9. Each card edge carries a
-  // ticket-style tear notch: a semicircular bite (radius 7) centred on the
-  // dash line, painted in the page colour so the background shows through.
   const r = 7;
   const top = 9 - r;
   const bottom = 9 + r;
@@ -147,32 +154,68 @@ function StatusColumn({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingTop: 14,
+    borderRadius: 24,
+    paddingHorizontal: 18,
+    paddingTop: 18,
     paddingBottom: 16,
+    overflow: 'hidden',
+    position: 'relative',
   },
-  topRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  kicker: { fontSize: 13 },
+  insetDash: {
+    ...StyleSheet.absoluteFillObject,
+    margin: 6,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    opacity: 0.7,
+  },
+  watermark: {
+    position: 'absolute',
+    right: -6,
+    bottom: 4,
+    fontSize: 64,
+    fontWeight: '800',
+    letterSpacing: 4,
+    opacity: 0.12,
+    transform: [{ rotate: '-12deg' }],
+  },
+  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', zIndex: 1 },
+  kicker: { fontSize: 13, fontWeight: '500' },
   pill: {
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 999,
   },
   pillText: { fontSize: 12, fontWeight: '600', fontVariant: ['tabular-nums'] },
-  metrics: { flexDirection: 'row', marginTop: 12 },
+  netWorth: { marginTop: 10, zIndex: 1 },
   label: { fontSize: 12 },
-  value: { marginTop: 4, fontSize: 28, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  netValue: {
+    marginTop: 4,
+    fontSize: 36,
+    fontWeight: '700',
+    letterSpacing: -0.8,
+    fontVariant: ['tabular-nums'],
+    lineHeight: 40,
+  },
+  metrics: { flexDirection: 'row', marginTop: 14, zIndex: 1 },
+  metricValue: {
+    marginTop: 4,
+    fontSize: 22,
+    fontWeight: '700',
+    letterSpacing: -0.3,
+    fontVariant: ['tabular-nums'],
+  },
   dashWrap: {
     marginTop: 4,
     marginBottom: 4,
-    marginHorizontal: -16,
+    marginHorizontal: -18,
     height: 18,
     justifyContent: 'center',
+    zIndex: 1,
   },
-  statusRow: { flexDirection: 'row', gap: 12 },
+  statusRow: { flexDirection: 'row', gap: 10, zIndex: 1 },
   statusColumn: { flex: 1 },
-  statusLabel: { fontSize: 11, marginBottom: 8 },
-  columnTrack: { height: 5, borderRadius: 999, overflow: 'hidden' },
-  columnFill: { height: '100%', borderRadius: 999 },
+  statusLabel: { fontSize: 11, marginBottom: 6 },
+  columnTrack: { height: 4, borderRadius: 2, overflow: 'hidden' },
+  columnFill: { height: '100%', borderRadius: 2 },
 });

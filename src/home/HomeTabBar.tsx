@@ -15,11 +15,13 @@ import { FilterTabs } from '../native/FilterTabs';
 import { NativeSegmented } from '../native/NativeSegmented';
 import { STATUS_FILTERS, type CategoryId } from '../types';
 import { useColors } from '../useColors';
+import { CategoryShareRow, type ShareRow } from './CategoryShareRow';
 
 const FADE_HEIGHT = 28;
 
 export function HomeTabBar({
   cats,
+  shares,
   statusIndex,
   onStatusChange,
   tabNames,
@@ -28,6 +30,7 @@ export function HomeTabBar({
   activeIndex,
 }: TabBarRenderProps & {
   cats: { id: CategoryId; label: string }[];
+  shares: ShareRow[];
   statusIndex: number;
   onStatusChange: (index: number) => void;
 }) {
@@ -55,6 +58,7 @@ export function HomeTabBar({
           if (name) onTabPress(name);
         }}
       />
+      <CategoryShareRow shares={shares} />
       <NativeSegmented
         values={STATUS_FILTERS.map((s) => s.label)}
         selectedIndex={statusIndex}

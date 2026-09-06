@@ -89,7 +89,9 @@ export const colors = palettes.light;
 export const radius = {
   sm: 12,
   md: 16,
-  lg: 22,
+  lg: 20,
+  /** Overview stamp card */
+  stamp: 24,
   xl: 26,
   pill: 999,
 };
@@ -98,6 +100,12 @@ export const space = {
   /** Horizontal page padding — design 16/20 */
   pageX: 16,
   pageXWide: 20,
+  /** Category tab gap */
+  tabGap: 20,
+  /** Overview stamp → category tabs */
+  tabToCard: 18,
+  /** Asset grid gap */
+  gridGap: 10,
 };
 
 export const shadow = {
