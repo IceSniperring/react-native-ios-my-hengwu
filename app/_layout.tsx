@@ -27,7 +27,6 @@ export default function RootLayout() {
   const c = useColors();
   const fontsReady = useAppFonts();
 
-  // One appearance source for JS + UIKit (tab materials, status bar, vibrancy).
   useEffect(() => {
     Appearance.setColorScheme(scheme);
   }, [scheme]);
@@ -74,77 +73,25 @@ export default function RootLayout() {
 
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: c.bg }}>
-      <ThemeProvider value={navTheme}>
-        {/* Follow the app scheme so status bar matches UI + tab material. */}
-        <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="asset/[id]"
-          options={{
-            headerShown: false,
-            // Standard iOS push/pop — left-edge swipe back stays enabled.
-            animation: Platform.OS === 'ios' ? 'default' : 'slide_from_right',
-            gestureEnabled: true,
-            contentStyle: { backgroundColor: c.bg },
-          }}
-        />
-        <Stack.Screen
-          name="asset/form"
-          options={{
-            headerShown: false,
-            presentation: 'modal',
-            contentStyle: { backgroundColor: c.bg },
-          }}
-        />
-        <Stack.Screen
-          name="pick/tags"
-          options={{
-            headerShown: false,
-            presentation: 'modal',
-            contentStyle: { backgroundColor: c.bg },
-          }}
-        />
-        <Stack.Screen
-          name="pick/category"
-          options={{
-            headerShown: false,
-            presentation: 'modal',
-            contentStyle: { backgroundColor: c.bg },
-          }}
-        />
-        <Stack.Screen
-          name="asset/sell"
-          options={{ ...nativeHeader, presentation: 'modal', title: '卖出复盘' }}
-        />
-        <Stack.Screen
-          name="search"
-          options={{
-            ...nativeHeader,
-            title: '搜索',
-            headerSearchBarOptions: {
-              placeholder: '搜资产名称',
-              hideWhenScrolling: false,
-              cancelButtonText: '取消',
-            },
-          }}
-        />
-        <Stack.Screen name="savings" options={{ ...nativeHeader, title: '智能攒钱' }} />
-        <Stack.Screen name="calendar" options={{ ...nativeHeader, title: '购入日历' }} />
-        <Stack.Screen name="manage/categories" options={{ ...nativeHeader, title: '分类' }} />
-        <Stack.Screen name="manage/tags" options={{ ...nativeHeader, title: '标签' }} />
-        <Stack.Screen
-          name="login"
-          options={{
-            headerShown: false,
-            presentation: 'modal',
-            contentStyle: { backgroundColor: c.bg },
-          }}
-        />
-        </Stack>
-      </ThemeProvider>
-    </GestureHandlerRootView>
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: c.bg }}>
+        <ThemeProvider value={navTheme}>
+          <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="asset/[id]" options={{ headerShown: false, animation: Platform.OS === 'ios' ? 'default' : 'slide_from_right', gestureEnabled: true, contentStyle: { backgroundColor: c.bg } }} />
+            <Stack.Screen name="asset/form" options={{ headerShown: false, presentation: 'modal', contentStyle: { backgroundColor: c.bg } }} />
+            <Stack.Screen name="pick/tags" options={{ headerShown: false, presentation: 'modal', contentStyle: { backgroundColor: c.bg } }} />
+            <Stack.Screen name="pick/category" options={{ headerShown: false, presentation: 'modal', contentStyle: { backgroundColor: c.bg } }} />
+            <Stack.Screen name="asset/sell" options={{ ...nativeHeader, presentation: 'modal', title: '卖出复盘' }} />
+            <Stack.Screen name="search" options={{ ...nativeHeader, title: '搜索', headerSearchBarOptions: { placeholder: '搜资产名称', hideWhenScrolling: false, cancelButtonText: '取消' } }} />
+            <Stack.Screen name="savings" options={{ ...nativeHeader, title: '智能攒钱' }} />
+            <Stack.Screen name="calendar" options={{ ...nativeHeader, title: '购入日历' }} />
+            <Stack.Screen name="manage/categories" options={{ ...nativeHeader, title: '分类' }} />
+            <Stack.Screen name="manage/tags" options={{ ...nativeHeader, title: '标签' }} />
+            <Stack.Screen name="login" options={{ headerShown: false, presentation: 'modal', contentStyle: { backgroundColor: c.bg } }} />
+          </Stack>
+        </ThemeProvider>
+      </GestureHandlerRootView>
     </ClerkProvider>
   );
 }
