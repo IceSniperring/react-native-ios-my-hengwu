@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Line, Path, Rect, Stop } from 'react-native-svg';
 
 import { formatMoney, parseISO, todayISO } from '../calc';
-import { LIME } from '../theme';
+import { LIME, numDisplay } from '../theme';
 import { useColors } from '../useColors';
 import { useStore } from '../store';
 
@@ -236,7 +236,7 @@ function DonutCenter({ label }: { label: string }) {
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <Text style={{ fontSize: 11, color: theme.textSecondary }}>总计(件)</Text>
-        <Text style={{ fontSize: 22, fontWeight: '800', color: theme.text }}>{label}</Text>
+        <Text style={{ fontSize: 22, ...numDisplay, color: theme.text }}>{label}</Text>
       </View>
     </View>
   );
