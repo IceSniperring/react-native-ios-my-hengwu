@@ -16,6 +16,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AddFab } from '../../src/components/AddFab';
+import { AuthGate } from '../../src/cloud/AuthGate';
+import { CloudWriteBanner } from '../../src/cloud/CloudWriteBanner';
+import { useCloudAssets } from '../../src/cloud/useCloudAssets';
 import { GlassIconButton } from '../../src/components/GlassIconButton';
 import { filterAssets, useOverview } from '../../src/hooks';
 import { CategoryPage } from '../../src/home/CategoryPage';
@@ -40,8 +43,7 @@ export default function HomeScreen() {
   const overview = useOverview();
   const tabsRef = useRef<CollapsingTabsRef>(null);
   const collapseProgress = useSharedValue(0);
-  const updateAsset = useStore((s) => s.updateAsset);
-  const removeAsset = useStore((s) => s.removeAsset);
+  const { updateAsset, removeAsset, refreshFromCloud, loadMigrated } = useCloudAssets();
   const menuPickerAssetId = useStore((s) => s.menuPickerAssetId);
   const setMenuPickerAssetId = useStore((s) => s.setMenuPickerAssetId);
   const categoryPickerResult = useStore((s) => s.categoryPickerResult);
@@ -59,6 +61,12 @@ export default function HomeScreen() {
   // Safe-area bottom is only the home indicator (~34); the pill is ~120pt.
   const bottomPad = Platform.OS === 'ios' ? insets.bottom + 120 : 96;
   const statusIndex = Math.max(0, STATUS_FILTERS.findIndex((s) => s.id === status));
+
+  useEffect(() => {
+    void loadMigrated();
+    void refreshFromCloud();
+  }, [loadMigrated, refreshFromCloud]);
+
 
   const cats = useMemo(() => {
     const used = catalog.filter((cat) => assets.some((a) => a.category === cat.id));
@@ -129,7 +137,7 @@ export default function HomeScreen() {
           text: '删除',
           style: 'destructive',
           onPress: () => {
-            for (const id of selectedIds) removeAsset(id);
+            for (const id of selectedIds) void removeAsset(id);
             exitSelect();
           },
         },
@@ -159,6 +167,7 @@ export default function HomeScreen() {
   );
 
   return (
+    <AuthGate>
     <GestureHandlerRootView style={[styles.root, { backgroundColor: c.bg }]}>
       <View style={[styles.topChrome, { paddingTop: insets.top, backgroundColor: c.bg }]}>
         <View style={styles.topRow}>
@@ -191,6 +200,8 @@ export default function HomeScreen() {
           </View>
         </View>
       </View>
+
+      <CloudWriteBanner />
 
       <Tabs.Container
         ref={tabsRef}
@@ -241,6 +252,7 @@ export default function HomeScreen() {
         <AddFab accessibilityLabel="添加物品" onPress={() => router.push('/asset/form')} />
       ) : null}
     </GestureHandlerRootView>
+    </AuthGate>
   );
 }
 

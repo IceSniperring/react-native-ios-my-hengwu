@@ -1,3 +1,5 @@
+import { ClerkProvider } from '@clerk/expo';
+import { tokenCache } from '@clerk/expo/token-cache';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -5,6 +7,7 @@ import { useEffect, useMemo } from 'react';
 import { Appearance, Platform, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { CLERK_PUBLISHABLE_KEY } from '../src/cloud/config';
 import { useStore } from '../src/store';
 import { FONT, useAppFonts } from '../src/typography';
 import { useColors } from '../src/useColors';
@@ -67,7 +70,10 @@ export default function RootLayout() {
     animation: Platform.OS === 'ios' ? ('default' as const) : ('slide_from_right' as const),
   };
 
+  const publishableKey = CLERK_PUBLISHABLE_KEY || 'pk_test_placeholder';
+
   return (
+    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: c.bg }}>
       <ThemeProvider value={navTheme}>
         {/* Follow the app scheme so status bar matches UI + tab material. */}
@@ -128,8 +134,17 @@ export default function RootLayout() {
         <Stack.Screen name="calendar" options={{ ...nativeHeader, title: '购入日历' }} />
         <Stack.Screen name="manage/categories" options={{ ...nativeHeader, title: '分类' }} />
         <Stack.Screen name="manage/tags" options={{ ...nativeHeader, title: '标签' }} />
+        <Stack.Screen
+          name="login"
+          options={{
+            headerShown: false,
+            presentation: 'modal',
+            contentStyle: { backgroundColor: c.bg },
+          }}
+        />
         </Stack>
       </ThemeProvider>
     </GestureHandlerRootView>
+    </ClerkProvider>
   );
 }

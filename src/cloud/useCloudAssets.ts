@@ -151,7 +151,15 @@ export function useCloudAssets() {
     } finally {
       setMigrating(false);
     }
-  }, [isSignedIn, userId, runMigrateInternal, setMigrating, setMigrateError, clearWriteError, setWriteFailure]);
+  }, [
+    isSignedIn,
+    userId,
+    runMigrateInternal,
+    setMigrating,
+    setMigrateError,
+    clearWriteError,
+    setWriteFailure,
+  ]);
 
   return {
     isSignedIn: !!isSignedIn,
