@@ -1,11 +1,21 @@
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { Alert, StyleSheet, Switch, Text, View } from 'react-native';
+import {
+  CalendarDays,
+  LayoutGrid,
+  Leaf,
+  Moon,
+  RotateCcw,
+  Tag,
+  Trash2,
+} from 'lucide-react-native';
+import { Alert, Platform, StyleSheet, Switch, Text, View } from 'react-native';
 
-import { GroupedRow, GroupedSection } from '../../src/components/GroupedList';
+import { GroupedRow, GroupedSection, GROUPED_INSETS } from '../../src/components/GroupedList';
 import { LargeTitleScreen } from '../../src/components/LargeTitleScreen';
 import { useOverview } from '../../src/hooks';
-import { LIME } from '../../src/theme';
+import { LIME, numDisplay } from '../../src/theme';
+import { FONT } from '../../src/typography';
 import { useStore } from '../../src/store';
 import { useColors } from '../../src/useColors';
 
@@ -19,6 +29,9 @@ export default function ProfileScreen() {
   const restoreDemo = useStore((s) => s.restoreDemo);
   const clearAll = useStore((s) => s.clearAll);
   const dark = scheme === 'dark';
+  const glyph = 20;
+  const iconColor = c.text;
+  const stroke = 2.2;
 
   return (
     <LargeTitleScreen title="我的">
@@ -27,27 +40,30 @@ export default function ProfileScreen() {
           <View style={[styles.avatar, { backgroundColor: LIME }]}>
             <Text style={styles.avatarGlyph}>衡</Text>
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.name, { color: c.text }]}>衡物 · 本地账本</Text>
-            <Text style={[styles.meta, { color: c.textSecondary }]}>数据只存在这台手机</Text>
+          <View style={styles.heroText}>
+            <Text style={[styles.name, { color: c.text }]}>衡物</Text>
+            <View style={[styles.localPill, { backgroundColor: c.chip }]}>
+              <View style={[styles.localDot, { backgroundColor: c.success }]} />
+              <Text style={[styles.localText, { color: c.textSecondary }]}>本地账本</Text>
+            </View>
           </View>
         </View>
       </GroupedSection>
 
       <GroupedSection>
         <View style={styles.stats}>
-          <Stat n={overview.assets.length} l="资产" color={c.text} muted={c.textSecondary} />
+          <Stat n={overview.assets.length} l="资产" />
           <View style={[styles.statRule, { backgroundColor: c.line }]} />
-          <Stat n={wishes.length} l="心愿" color={c.text} muted={c.textSecondary} />
+          <Stat n={wishes.length} l="心愿" />
           <View style={[styles.statRule, { backgroundColor: c.line }]} />
-          <Stat n={plans.length} l="攒钱计划" color={c.text} muted={c.textSecondary} />
+          <Stat n={plans.length} l="攒钱计划" />
         </View>
       </GroupedSection>
 
-      <GroupedSection header="外观">
+      <GroupedSection header="外观" inset={GROUPED_INSETS.plain}>
         <GroupedRow
-          icon="moon.fill"
-          iconBg="#5856D6"
+          plain
+          icon={<Moon size={glyph} color={iconColor} strokeWidth={stroke} />}
           label="深色模式"
           chevron={false}
           accessory={
@@ -65,41 +81,43 @@ export default function ProfileScreen() {
         />
       </GroupedSection>
 
-      <GroupedSection header="工具">
+      <GroupedSection header="工具" inset={GROUPED_INSETS.plain}>
         <GroupedRow
-          icon="leaf"
-          iconBg={LIME}
-          iconTint="#1C1C1E"
+          plain
+          icon={<Leaf size={glyph} color={iconColor} strokeWidth={stroke} />}
           label="智能攒钱计划"
           onPress={() => router.push('/savings')}
         />
         <GroupedRow
-          icon="calendar"
-          iconBg="#FF9500"
+          plain
+          icon={<CalendarDays size={glyph} color={iconColor} strokeWidth={stroke} />}
           label="购入日历"
           onPress={() => router.push('/calendar')}
         />
       </GroupedSection>
 
-      <GroupedSection header="管理">
+      <GroupedSection header="管理" inset={GROUPED_INSETS.plain}>
         <GroupedRow
-          icon="square.grid.2x2"
-          iconBg="#007AFF"
+          plain
+          icon={<LayoutGrid size={glyph} color={iconColor} strokeWidth={stroke} />}
           label="分类"
           onPress={() => router.push('/manage/categories')}
         />
         <GroupedRow
-          icon="tag"
-          iconBg="#AF52DE"
+          plain
+          icon={<Tag size={glyph} color={iconColor} strokeWidth={stroke} />}
           label="标签"
           onPress={() => router.push('/manage/tags')}
         />
       </GroupedSection>
 
-      <GroupedSection header="数据" footer="衡物是本地资产账本。买入 · 服役 · 退役 · 卖出，把每件物品放上秤。">
+      <GroupedSection
+        header="数据"
+        inset={GROUPED_INSETS.plain}
+        footer="买入 · 服役 · 退役 · 卖出，把每件物品放上秤。数据只存在这台手机。">
         <GroupedRow
-          icon="arrow.counterclockwise"
-          iconBg="#8E8E93"
+          plain
+          icon={<RotateCcw size={glyph} color={iconColor} strokeWidth={stroke} />}
           label="恢复演示数据"
           onPress={() =>
             Alert.alert('恢复演示数据', '当前本地数据会被演示数据覆盖。', [
@@ -109,8 +127,8 @@ export default function ProfileScreen() {
           }
         />
         <GroupedRow
-          icon="trash.fill"
-          iconBg={c.danger}
+          plain
+          icon={<Trash2 size={glyph} color={c.danger} strokeWidth={stroke} />}
           label="清空全部数据"
           destructive
           onPress={() =>
@@ -125,41 +143,86 @@ export default function ProfileScreen() {
   );
 }
 
-function Stat({ n, l, color, muted }: { n: number; l: string; color: string; muted: string }) {
+function Stat({ n, l }: { n: number; l: string }) {
+  const c = useColors();
   return (
     <View style={styles.stat}>
-      <Text style={[styles.statN, { color }]}>{n}</Text>
-      <Text style={[styles.statL, { color: muted }]}>{l}</Text>
+      <Text style={[styles.statN, { color: c.text }]}>{n}</Text>
+      <Text style={[styles.statL, { color: c.textSecondary }]}>{l}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   hero: {
-    minHeight: 76,
+    minHeight: 88,
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 16,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
   },
   avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
+    width: 60,
+    height: 60,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarGlyph: { fontSize: 24, fontWeight: '800', color: '#1C1C1E' },
-  name: { fontSize: 17, fontWeight: '600' },
-  meta: { marginTop: 3, fontSize: 13 },
-  stats: {
-    minHeight: 72,
+  avatarGlyph: {
+    fontFamily: FONT.extrabold,
+    fontSize: 26,
+    color: '#1C1C1E',
+  },
+  heroText: {
+    flex: 1,
+    gap: 6,
+  },
+  name: {
+    fontFamily: FONT.bold,
+    fontSize: 20,
+    letterSpacing: -0.2,
+  },
+  localPill: {
+    alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
   },
-  stat: { flex: 1, alignItems: 'center', paddingVertical: 14 },
-  statN: { fontSize: 22, fontWeight: '700', fontVariant: ['tabular-nums'] },
-  statL: { fontSize: 12, marginTop: 4 },
-  statRule: { width: StyleSheet.hairlineWidth, height: 36 },
+  localDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  localText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  stats: {
+    minHeight: 80,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  stat: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  statN: {
+    fontSize: 24,
+    ...numDisplay,
+  },
+  statL: {
+    marginTop: 4,
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  statRule: {
+    width: StyleSheet.hairlineWidth,
+    height: 32,
+  },
 });

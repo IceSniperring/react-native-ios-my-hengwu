@@ -31,10 +31,7 @@ type Props = {
   style?: StyleProp<ViewStyle>;
 };
 
-/**
- * Anchored system menu. Layout comes from `children`; the menu host is an
- * overlay so SwiftUI Host padding cannot stretch the row.
- */
+/** System menu — iOS UIMenu images must be SF Symbols. */
 export function NativeMenu({ children, actions, title, onSelect, style }: Props) {
   const c = useColors();
   const [open, setOpen] = useState(false);

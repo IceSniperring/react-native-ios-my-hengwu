@@ -1,3 +1,7 @@
+import type { TextStyle } from 'react-native';
+
+import { FONT } from './typography';
+
 export type ColorScheme = 'light' | 'dark';
 
 /** Brand lime — tab bar selected only (designer lock) */
@@ -91,4 +95,27 @@ export const shadow = {
     shadowOffset: { width: 0, height: 4 },
     elevation: 3,
   },
+};
+
+/**
+ * Numeric type — Nunito, bold money figures with tabular digits.
+ */
+export const numStyle: TextStyle = {
+  fontFamily: FONT.bold,
+  fontVariant: ['tabular-nums'],
+  letterSpacing: -0.15,
+};
+
+/** Display-size money figures (overview, detail hero). */
+export const numDisplay: TextStyle = {
+  fontFamily: FONT.extrabold,
+  fontVariant: ['tabular-nums'],
+  letterSpacing: -0.3,
+};
+
+/** Secondary numbers / units next to money. */
+export const numMuted: TextStyle = {
+  fontFamily: FONT.medium,
+  fontVariant: ['tabular-nums'],
+  letterSpacing: 0,
 };

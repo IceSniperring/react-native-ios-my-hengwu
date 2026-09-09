@@ -23,7 +23,9 @@ export function StickerImage({ imageKey, imageUri, size = 88, style, radius = 16
   const isCutout = Boolean(imageUri);
 
   return (
-    <View style={[{ width: size, height: size }, style]}>
+    <View
+      collapsable={false}
+      style={[{ width: size, height: size }, style]}>
       {/* Soft white outline halo for non-cutout templates */}
       {!isCutout && source ? (
         <View

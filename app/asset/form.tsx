@@ -1,6 +1,5 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
-import type { SFSymbol } from 'expo-symbols';
 import { useEffect, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
@@ -27,7 +26,7 @@ import { parseISO, toISO, todayISO } from '../../src/calc';
 import { GlassIconButton } from '../../src/components/GlassIconButton';
 import { StickerImage } from '../../src/components/StickerImage';
 import { NativeMenu } from '../../src/native/NativeMenu';
-import { PlatformIcon } from '../../src/native/PlatformIcon';
+import { PlatformIcon, type AppIconName } from '../../src/native/PlatformIcon';
 import { NativeSegmented } from '../../src/native/NativeSegmented';
 import { NativeSheet } from '../../src/native/NativeSheet';
 import { pickAssetImage, takeAssetPhoto } from '../../src/pickImage';
@@ -76,24 +75,26 @@ export default function AssetForm() {
   const [imageUri, setImageUri] = useState<string | undefined>(existing?.imageUri);
   const [lifting, setLifting] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
-  const tagPickerResult = useStore((s) => s.tagPickerResult);
   const categoryPickerResult = useStore((s) => s.categoryPickerResult);
+  const tagPickerResult = useStore((s) => s.tagPickerResult);
+  const menuPickerAssetId = useStore((s) => s.menuPickerAssetId);
   const beginTagPicker = useStore((s) => s.beginTagPicker);
   const beginCategoryPicker = useStore((s) => s.beginCategoryPicker);
   const clearTagPickerResult = useStore((s) => s.clearTagPickerResult);
   const clearCategoryPickerResult = useStore((s) => s.clearCategoryPickerResult);
+  const setMenuPickerAssetId = useStore((s) => s.setMenuPickerAssetId);
 
   useEffect(() => {
-    if (!tagPickerResult) return;
+    if (!tagPickerResult || menuPickerAssetId) return;
     setTags(tagPickerResult);
     clearTagPickerResult();
-  }, [tagPickerResult, clearTagPickerResult]);
+  }, [tagPickerResult, menuPickerAssetId, clearTagPickerResult]);
 
   useEffect(() => {
-    if (!categoryPickerResult) return;
+    if (!categoryPickerResult || menuPickerAssetId) return;
     setCategory(categoryPickerResult);
     clearCategoryPickerResult();
-  }, [categoryPickerResult, clearCategoryPickerResult]);
+  }, [categoryPickerResult, menuPickerAssetId, clearCategoryPickerResult]);
   const scrollY = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler({
     onScroll: (e) => {
@@ -257,6 +258,7 @@ export default function AssetForm() {
           ) : null}
           <Pressable
             onPress={() => {
+              setMenuPickerAssetId(null);
               beginCategoryPicker(category);
               router.push('/pick/category');
             }}>
@@ -266,6 +268,7 @@ export default function AssetForm() {
           </Pressable>
           <Pressable
             onPress={() => {
+              setMenuPickerAssetId(null);
               beginTagPicker(tags);
               router.push('/pick/tags');
             }}>
@@ -367,7 +370,7 @@ function FieldRow({
   last,
   chevron,
 }: {
-  icon: SFSymbol;
+  icon: AppIconName | string;
   label: string;
   c: { text: string; textSecondary: string; line: string; textTertiary: string };
   children?: ReactNode;

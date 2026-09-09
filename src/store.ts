@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Appearance } from 'react-native';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
@@ -62,6 +63,8 @@ type State = {
   beginCategoryPicker: (selected: string) => void;
   commitCategoryPicker: (selected: string) => void;
   clearCategoryPickerResult: () => void;
+  menuPickerAssetId: string | null;
+  setMenuPickerAssetId: (id: string | null) => void;
 };
 
 export const useStore = create<State>()(
@@ -69,7 +72,13 @@ export const useStore = create<State>()(
     (set, get) => ({
       hydrated: false,
       colorScheme: 'light',
-      setColorScheme: (scheme) => set({ colorScheme: scheme }),
+      setColorScheme: (scheme) => {
+        // Force the whole native app (tab materials, status bar, UIKit
+        // vibrancy) to the same scheme as JS — otherwise a dark phone +
+        // light app leaves mixed chrome.
+        Appearance.setColorScheme(scheme);
+        set({ colorScheme: scheme });
+      },
       assets: demoAssets(),
       wishes: demoWishes(),
       plans: demoPlans(),
@@ -168,6 +177,8 @@ export const useStore = create<State>()(
       beginCategoryPicker: (selected) => set({ categoryPickerSeed: selected, categoryPickerResult: null }),
       commitCategoryPicker: (selected) => set({ categoryPickerResult: selected }),
       clearCategoryPickerResult: () => set({ categoryPickerResult: null }),
+      menuPickerAssetId: null,
+      setMenuPickerAssetId: (id) => set({ menuPickerAssetId: id }),
     }),
     {
       name: 'hengwu-db',
@@ -189,7 +200,11 @@ export const useStore = create<State>()(
           tagLibrary: p.tagLibrary ?? [],
         };
       },
-      onRehydrateStorage: () => () => useStore.getState().setHydrated(),
+      onRehydrateStorage: () => () => {
+        // Align native chrome with the persisted app scheme immediately.
+        Appearance.setColorScheme(useStore.getState().colorScheme);
+        useStore.getState().setHydrated();
+      },
     },
   ),
 );

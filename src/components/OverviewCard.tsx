@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, type DimensionValue } from 'react-native';
 import Svg, { Line, Path } from 'react-native-svg';
 
 import { formatMoney } from '../calc';
-import { LIME } from '../theme';
+import { LIME, numDisplay, numMuted } from '../theme';
 import { useStore } from '../store';
 import { useColors } from '../useColors';
 
@@ -159,10 +159,10 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 999,
   },
-  pillText: { fontSize: 12, fontWeight: '600', fontVariant: ['tabular-nums'] },
+  pillText: { fontSize: 12, ...numMuted },
   metrics: { flexDirection: 'row', marginTop: 12 },
   label: { fontSize: 12 },
-  value: { marginTop: 4, fontSize: 28, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  value: { marginTop: 4, fontSize: 28, ...numDisplay },
   dashWrap: {
     marginTop: 4,
     marginBottom: 4,

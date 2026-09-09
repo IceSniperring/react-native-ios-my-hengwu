@@ -16,7 +16,7 @@ import { GroupedRow, GroupedSection } from '../../src/components/GroupedList';
 import { LargeTitleScreen } from '../../src/components/LargeTitleScreen';
 import { useOverview } from '../../src/hooks';
 import { NativeSegmented } from '../../src/native/NativeSegmented';
-import { LIME } from '../../src/theme';
+import { LIME, numDisplay, numStyle } from '../../src/theme';
 import { useSelectableCategories } from '../../src/catalog';
 import { useColors } from '../../src/useColors';
 
@@ -219,7 +219,7 @@ export default function InsightsScreen() {
                           <Text style={{ flex: 1, color: c.text, fontSize: 15 }}>
                             {s.label}  {Math.round((s.value / totalValue) * 100)}%
                           </Text>
-                          <Text style={{ fontWeight: '600', color: c.text, fontVariant: ['tabular-nums'] }}>
+                          <Text style={{ color: c.text, fontSize: 15, ...numStyle }}>
                             {mode === 'price' ? formatMoney(s.value) : `${s.value}件`}
                           </Text>
                         </View>
@@ -257,7 +257,7 @@ function LegendDot({
         <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />
         <Text style={{ fontSize: 12, color: muted }}>{label}</Text>
       </View>
-      <Text style={{ fontSize: 17, fontWeight: '700', marginTop: 2, marginLeft: 14, color: text, fontVariant: ['tabular-nums'] }}>
+      <Text style={{ fontSize: 17, marginTop: 2, marginLeft: 14, color: text, ...numStyle }}>
         {value}
       </Text>
     </View>
@@ -267,8 +267,8 @@ function LegendDot({
 const styles = StyleSheet.create({
   pad: { paddingHorizontal: 16, paddingVertical: 14 },
   kicker: { fontSize: 13 },
-  big: { fontSize: 28, fontWeight: '800', marginTop: 2, fontVariant: ['tabular-nums'] },
-  mid: { fontSize: 22, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  big: { fontSize: 28, marginTop: 2, ...numDisplay },
+  mid: { fontSize: 22, ...numStyle },
   empty: { textAlign: 'center', paddingVertical: 24, fontSize: 15 },
   statusRow: { flexDirection: 'row', marginTop: 16, alignItems: 'center' },
   cardHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },

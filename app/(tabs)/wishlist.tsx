@@ -8,7 +8,7 @@ import { GroupedSection } from '../../src/components/GroupedList';
 import { LargeTitleScreen } from '../../src/components/LargeTitleScreen';
 import { PlatformIcon } from '../../src/native/PlatformIcon';
 import { StickerImage } from '../../src/components/StickerImage';
-import { LIME } from '../../src/theme';
+import { LIME, numStyle } from '../../src/theme';
 import { useStore } from '../../src/store';
 import { useColors } from '../../src/useColors';
 
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   name: { fontSize: 17, fontWeight: '600' },
-  meta: { fontSize: 13, marginTop: 4, fontVariant: ['tabular-nums'] },
+  meta: { fontSize: 13, marginTop: 4, ...numStyle },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -12,6 +12,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useColors } from '../useColors';
+import { FONT } from '../typography';
 
 type Props = {
   title: string;
@@ -114,16 +115,16 @@ const styles = StyleSheet.create({
     paddingLeft: 4,
   },
   compact: {
+    fontFamily: FONT.bold,
     fontSize: 17,
-    fontWeight: '700',
   },
   compactMd: {
+    fontFamily: FONT.medium,
     fontSize: 22,
-    fontWeight: '500',
   },
   largeMd: {
+    fontFamily: FONT.regular,
     fontSize: 28,
-    fontWeight: '400',
     letterSpacing: 0,
   },
   accessory: {
@@ -147,8 +148,8 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   large: {
+    fontFamily: FONT.extrabold,
     fontSize: 34,
-    fontWeight: '800',
     letterSpacing: 0.4,
   },
   subtitle: {

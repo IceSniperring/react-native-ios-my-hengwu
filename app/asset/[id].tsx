@@ -1,5 +1,4 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import { PlatformIcon } from '../../src/native/PlatformIcon';
+import { Link, router, useLocalSearchParams } from 'expo-router';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -12,10 +11,11 @@ import {
 } from '../../src/calc';
 import { DailyCostChart } from '../../src/components/Charts';
 import { GlassIconButton } from '../../src/components/GlassIconButton';
+import { PlatformIcon } from '../../src/native/PlatformIcon';
 import { StickerImage } from '../../src/components/StickerImage';
 import { useAsset } from '../../src/hooks';
-
 import { useCategoryLabel } from '../../src/catalog';
+import { numDisplay } from '../../src/theme';
 import { useStore } from '../../src/store';
 import { useColors } from '../../src/useColors';
 
@@ -66,7 +66,18 @@ export default function AssetDetail() {
         contentContainerStyle={{ paddingTop: insets.top + 56, paddingBottom: insets.bottom + 32 }}
         showsVerticalScrollIndicator={false}>
         <View style={styles.hero}>
-          <StickerImage imageKey={asset.imageKey} imageUri={asset.imageUri} size={108} radius={22} />
+          <Link.AppleZoomTarget>
+            <View
+              collapsable={false}
+              style={{ width: 108, height: 108 }}>
+              <StickerImage
+                imageKey={asset.imageKey}
+                imageUri={asset.imageUri}
+                size={108}
+                radius={22}
+              />
+            </View>
+          </Link.AppleZoomTarget>
         </View>
 
         <Text style={[styles.name, { color: c.text }]}>{asset.name}</Text>
@@ -155,12 +166,11 @@ const styles = StyleSheet.create({
   dailyCost: {
     textAlign: 'center',
     fontSize: 34,
-    fontWeight: '700',
+    ...numDisplay,
     marginTop: 6,
-    letterSpacing: -0.6,
   },
-  dailySymbol: { fontSize: 20, fontWeight: '700' },
-  dailyUnit: { fontSize: 16, fontWeight: '500' },
+  dailySymbol: { fontSize: 20, fontFamily: 'Nunito_700Bold' },
+  dailyUnit: { fontSize: 16, fontFamily: 'Nunito_500Medium' },
   subtitle: {
     textAlign: 'center',
     fontSize: 13,
