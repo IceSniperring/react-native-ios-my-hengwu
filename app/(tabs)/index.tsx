@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { Platform, Pressable, View, useWindowDimensions } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
   Extrapolation,
@@ -40,8 +40,18 @@ export default function HomeScreen() {
   const overview = useOverview();
   const tabsRef = useRef<CollapsingTabsRef>(null);
   const collapseProgress = useSharedValue(0);
+  const updateAsset = useStore((s) => s.updateAsset);
+  const removeAsset = useStore((s) => s.removeAsset);
+  const menuPickerAssetId = useStore((s) => s.menuPickerAssetId);
+  const setMenuPickerAssetId = useStore((s) => s.setMenuPickerAssetId);
+  const categoryPickerResult = useStore((s) => s.categoryPickerResult);
+  const tagPickerResult = useStore((s) => s.tagPickerResult);
+  const clearCategoryPickerResult = useStore((s) => s.clearCategoryPickerResult);
+  const clearTagPickerResult = useStore((s) => s.clearTagPickerResult);
 
   const [status, setStatus] = useState<AssetStatus | 'all'>('all');
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const gap = 10;
   const pad = 16;
   const cardW = (width - pad * 2 - gap) / 2;
@@ -66,6 +76,20 @@ export default function HomeScreen() {
     return map;
   }, [assets, cats, status]);
 
+  useEffect(() => {
+    if (!categoryPickerResult || !menuPickerAssetId) return;
+    updateAsset(menuPickerAssetId, { category: categoryPickerResult });
+    clearCategoryPickerResult();
+    setMenuPickerAssetId(null);
+  }, [categoryPickerResult, menuPickerAssetId, updateAsset, clearCategoryPickerResult, setMenuPickerAssetId]);
+
+  useEffect(() => {
+    if (!tagPickerResult || !menuPickerAssetId) return;
+    updateAsset(menuPickerAssetId, { tags: tagPickerResult });
+    clearTagPickerResult();
+    setMenuPickerAssetId(null);
+  }, [tagPickerResult, menuPickerAssetId, updateAsset, clearTagPickerResult, setMenuPickerAssetId]);
+
   const expandHeader = useCallback(() => {
     tabsRef.current?.scrollToTop(true);
   }, []);
@@ -73,6 +97,45 @@ export default function HomeScreen() {
   const onStatusChange = useCallback((i: number) => {
     setStatus(STATUS_FILTERS[i]?.id ?? 'all');
   }, []);
+
+  const exitSelect = useCallback(() => {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  }, []);
+
+  const enterSelect = useCallback((id: string) => {
+    setSelectMode(true);
+    setSelectedIds(new Set([id]));
+  }, []);
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const deleteSelected = useCallback(() => {
+    const count = selectedIds.size;
+    if (count === 0) return;
+    Alert.alert(
+      '删除资产',
+      count === 1 ? '删除后无法恢复。' : `删除选中的 ${count} 项后无法恢复。`,
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '删除',
+          style: 'destructive',
+          onPress: () => {
+            for (const id of selectedIds) removeAsset(id);
+            exitSelect();
+          },
+        },
+      ],
+    );
+  }, [selectedIds, removeAsset, exitSelect]);
 
   const compactTitleStyle = useAnimatedStyle(() => ({
     opacity: interpolate(collapseProgress.value, [0.35, 0.75], [0, 1], Extrapolation.CLAMP),
@@ -102,20 +165,30 @@ export default function HomeScreen() {
         <View style={styles.topRow}>
           <Pressable hitSlop={12} onPress={expandHeader} style={styles.titlePress}>
             <Animated.Text style={[styles.compactTitle, { color: c.text }, compactTitleStyle]}>
-              有数
+              {selectMode ? `已选 ${selectedIds.size}` : '有数'}
             </Animated.Text>
           </Pressable>
           <View style={styles.topActions}>
-            <GlassIconButton
-              name="magnifyingglass"
-              accessibilityLabel="搜索"
-              onPress={() => router.push('/search')}
-            />
-            <GlassIconButton
-              name="calendar"
-              accessibilityLabel="购入日历"
-              onPress={() => router.push('/calendar')}
-            />
+            {selectMode ? (
+              <GlassIconButton
+                name="xmark"
+                accessibilityLabel="退出选择"
+                onPress={exitSelect}
+              />
+            ) : (
+              <>
+                <GlassIconButton
+                  name="magnifyingglass"
+                  accessibilityLabel="搜索"
+                  onPress={() => router.push('/search')}
+                />
+                <GlassIconButton
+                  name="calendar"
+                  accessibilityLabel="购入日历"
+                  onPress={() => router.push('/calendar')}
+                />
+              </>
+            )}
           </View>
         </View>
       </View>
@@ -139,11 +212,61 @@ export default function HomeScreen() {
               pad={pad}
               bottomPad={bottomPad}
               showNextStep={cat.id === 'all'}
+              selectMode={selectMode}
+              selectedIds={selectedIds}
+              onToggleSelect={toggleSelect}
+              onEnterSelect={enterSelect}
             />
           </Tabs.Tab>
         ))}
       </Tabs.Container>
-      <AddFab accessibilityLabel="添加物品" onPress={() => router.push('/ingress')} />
+      {selectMode && selectedIds.size > 0 ? (
+        <View
+          pointerEvents="box-none"
+          style={[
+            selectBar.wrap,
+            { bottom: insets.bottom + (Platform.OS === 'ios' ? 110 : 84) },
+          ]}>
+          <Pressable
+            onPress={deleteSelected}
+            style={({ pressed }) => [
+              selectBar.btn,
+              { backgroundColor: c.danger, opacity: pressed ? 0.88 : 1 },
+            ]}>
+            <Text style={[selectBar.btnText, { color: '#FFFFFF' }]}>
+              删除 {selectedIds.size} 项
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
+      {!selectMode ? (
+        <AddFab accessibilityLabel="入账" onPress={() => router.push('/ingress')} />
+      ) : null}
     </GestureHandlerRootView>
   );
 }
+
+const selectBar = StyleSheet.create({
+  wrap: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    alignItems: 'center',
+  },
+  btn: {
+    minHeight: 48,
+    paddingHorizontal: 28,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000000',
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
+  },
+  btnText: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+});
