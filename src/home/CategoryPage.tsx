@@ -1,12 +1,67 @@
-import { router } from 'expo-router';
+import { Link } from 'expo-router';
 import { memo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Tabs } from 'react-native-collapsible-tab';
 
 import { AssetCard } from '../components/AssetCard';
+import { AssetContextMenu } from './AssetContextMenu';
 import { useColors } from '../useColors';
 import type { Asset } from '../types';
 import { NextStepPlaceholder } from './NextStepPlaceholder';
+
+function AssetRow({
+  asset,
+  cardW,
+  selectMode,
+  selected,
+  onToggleSelect,
+  onEnterSelect,
+}: {
+  asset: Asset;
+  cardW: number;
+  selectMode: boolean;
+  selected: boolean;
+  onToggleSelect: (id: string) => void;
+  onEnterSelect: (id: string) => void;
+}) {
+  const box = { width: cardW, height: cardW };
+
+  if (selectMode) {
+    return (
+      <AssetContextMenu
+        asset={asset}
+        size={cardW}
+        selectMode
+        onEnterSelect={onEnterSelect}>
+        <AssetCard
+          asset={asset}
+          size={cardW}
+          selectMode
+          selected={selected}
+          onPress={() => onToggleSelect(asset.id)}
+        />
+      </AssetContextMenu>
+    );
+  }
+
+  return (
+    <AssetContextMenu
+      asset={asset}
+      size={cardW}
+      selectMode={false}
+      onEnterSelect={onEnterSelect}>
+      <Link href={`/asset/${asset.id}`} asChild>
+        <Pressable style={box}>
+          <Link.AppleZoom>
+            <View collapsable={false} style={styles.zoomHost}>
+              <AssetCard asset={asset} size={cardW} pressable={false} />
+            </View>
+          </Link.AppleZoom>
+        </Pressable>
+      </Link>
+    </AssetContextMenu>
+  );
+}
 
 export const CategoryPage = memo(function CategoryPage({
   rows,
@@ -15,6 +70,10 @@ export const CategoryPage = memo(function CategoryPage({
   pad,
   bottomPad,
   showNextStep,
+  selectMode,
+  selectedIds,
+  onToggleSelect,
+  onEnterSelect,
 }: {
   rows: Asset[][];
   cardW: number;
@@ -23,6 +82,10 @@ export const CategoryPage = memo(function CategoryPage({
   bottomPad: number;
   /** Only the "全部" tab shows the next-step actions strip (PR③ Sheet). */
   showNextStep?: boolean;
+  selectMode: boolean;
+  selectedIds: ReadonlySet<string>;
+  onToggleSelect: (id: string) => void;
+  onEnterSelect: (id: string) => void;
 }) {
   const c = useColors();
 
@@ -56,11 +119,14 @@ export const CategoryPage = memo(function CategoryPage({
                 marginBottom: i === rows.length - 1 ? 0 : gap,
               }}>
               {row.map((a) => (
-                <AssetCard
+                <AssetRow
                   key={a.id}
                   asset={a}
-                  size={cardW}
-                  onPress={() => router.push(`/asset/${a.id}`)}
+                  cardW={cardW}
+                  selectMode={selectMode}
+                  selected={selectedIds.has(a.id)}
+                  onEnterSelect={onEnterSelect}
+                  onToggleSelect={onToggleSelect}
                 />
               ))}
               {row.length === 1 ? <View style={{ width: cardW }} /> : null}
@@ -73,9 +139,6 @@ export const CategoryPage = memo(function CategoryPage({
           ) : null}
         </View>
       )}
-      {/* Clears the floating tab bar for long lists. Short lists still only
-          scroll far enough to collapse the overview — extra space is empty,
-          not extra offset, so the last card cannot be pushed under the tabs. */}
       <View style={{ height: bottomPad }} />
     </Tabs.ScrollView>
   );
@@ -84,6 +147,10 @@ export const CategoryPage = memo(function CategoryPage({
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   content: { flexGrow: 1 },
+  zoomHost: {
+    width: '100%',
+    height: '100%',
+  },
   empty: { paddingVertical: 48, alignItems: 'center' },
   emptyTitle: { fontSize: 16, fontWeight: '700' },
   emptySub: { marginTop: 6, fontSize: 13 },
