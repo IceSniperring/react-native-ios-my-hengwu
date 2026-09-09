@@ -15,12 +15,14 @@ export function filterAssets(
   q = '',
 ) {
   const query = q.trim().toLowerCase();
-  return assets.filter((a) => {
-    if (category !== 'all' && a.category !== category) return false;
-    if (status !== 'all' && a.status !== status) return false;
-    if (query && !a.name.toLowerCase().includes(query)) return false;
-    return true;
-  });
+  return assets
+    .filter((a) => {
+      if (category !== 'all' && a.category !== category) return false;
+      if (status !== 'all' && a.status !== status) return false;
+      if (query && !a.name.toLowerCase().includes(query)) return false;
+      return true;
+    })
+    .sort((a, b) => Number(!!b.starred) - Number(!!a.starred));
 }
 
 export function useFilteredAssets(category: CategoryId, status: AssetStatus | 'all', q = '') {
