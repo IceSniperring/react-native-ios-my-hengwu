@@ -2,10 +2,11 @@ import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo } from 'react';
-import { Platform, View } from 'react-native';
+import { Appearance, Platform, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useStore } from '../src/store';
+import { FONT, useAppFonts } from '../src/typography';
 import { useColors } from '../src/useColors';
 
 SplashScreen.preventAutoHideAsync();
@@ -21,6 +22,12 @@ export default function RootLayout() {
   const setHydrated = useStore((s) => s.setHydrated);
   const scheme = useStore((s) => s.colorScheme);
   const c = useColors();
+  const fontsReady = useAppFonts();
+
+  // One appearance source for JS + UIKit (tab materials, status bar, vibrancy).
+  useEffect(() => {
+    Appearance.setColorScheme(scheme);
+  }, [scheme]);
 
   useEffect(() => {
     const t = setTimeout(() => setHydrated(), 250);
@@ -28,8 +35,8 @@ export default function RootLayout() {
   }, [setHydrated]);
 
   useEffect(() => {
-    if (hydrated) SplashScreen.hideAsync();
-  }, [hydrated]);
+    if (hydrated && fontsReady) SplashScreen.hideAsync();
+  }, [hydrated, fontsReady]);
 
   const navTheme = useMemo(() => {
     const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
@@ -47,14 +54,14 @@ export default function RootLayout() {
     };
   }, [scheme, c]);
 
-  if (!hydrated) return <View style={{ flex: 1, backgroundColor: c.bg }} />;
+  if (!hydrated || !fontsReady) return <View style={{ flex: 1, backgroundColor: c.bg }} />;
 
   const nativeHeader = {
     headerShown: true,
     headerShadowVisible: Platform.OS === 'android',
     headerBackTitle: '返回',
     headerTintColor: c.text,
-    headerTitleStyle: { fontWeight: '600' as const, color: c.text },
+    headerTitleStyle: { fontFamily: FONT.bold, color: c.text },
     headerStyle: { backgroundColor: c.bg },
     contentStyle: { backgroundColor: c.bg },
     animation: Platform.OS === 'ios' ? ('default' as const) : ('slide_from_right' as const),
@@ -63,6 +70,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: c.bg }}>
       <ThemeProvider value={navTheme}>
+        {/* Follow the app scheme so status bar matches UI + tab material. */}
         <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -92,7 +100,13 @@ export default function RootLayout() {
         />
         <Stack.Screen
           name="asset/[id]"
-          options={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}
+          options={{
+            headerShown: false,
+            // Standard iOS push/pop — left-edge swipe back stays enabled.
+            animation: Platform.OS === 'ios' ? 'default' : 'slide_from_right',
+            gestureEnabled: true,
+            contentStyle: { backgroundColor: c.bg },
+          }}
         />
         <Stack.Screen
           name="asset/form"

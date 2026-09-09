@@ -1,24 +1,30 @@
-import type { SFSymbol } from 'expo-symbols';
-import { Children, type ReactNode } from 'react';
+import { ChevronRight } from 'lucide-react-native';
+import { Children, isValidElement, type ReactNode } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { PlatformIcon } from '../native/PlatformIcon';
+import { PlatformIcon, type AppIconName } from '../native/PlatformIcon';
 import { useColors } from '../useColors';
 
-const ICON = 29;
-const INSET = 16 + ICON + 12;
+const WELL = 32;
+const WELL_INSET = 16 + WELL + 12;
+const PLAIN_ICON = 20;
+const PLAIN_INSET = 16 + PLAIN_ICON + 10;
 
 export function GroupedSection({
   header,
   footer,
+  inset,
   children,
 }: {
   header?: string;
   footer?: string;
+  /** Leading indent for separators. Defaults to icon-well layout. */
+  inset?: number;
   children: ReactNode;
 }) {
   const c = useColors();
   const items = Children.toArray(children).filter(Boolean);
+  const sepInset = inset ?? WELL_INSET;
   return (
     <View style={styles.section}>
       {header ? <Text style={[styles.header, { color: c.textSecondary }]}>{header}</Text> : null}
@@ -32,7 +38,7 @@ export function GroupedSection({
           <View key={i}>
             {child}
             {i < items.length - 1 ? (
-              <View style={[styles.sep, { backgroundColor: c.line, marginLeft: INSET }]} />
+              <View style={[styles.sep, { backgroundColor: c.line, marginLeft: sepInset }]} />
             ) : null}
           </View>
         ))}
@@ -46,6 +52,7 @@ export function GroupedRow({
   icon,
   iconBg,
   iconTint = '#FFFFFF',
+  plain,
   label,
   value,
   onPress,
@@ -53,9 +60,12 @@ export function GroupedRow({
   chevron,
   destructive,
 }: {
-  icon?: SFSymbol;
+  /** SF name, or a custom SVG/element node. */
+  icon?: AppIconName | string | ReactNode;
   iconBg?: string;
   iconTint?: string;
+  /** Render the leading icon without a colored well. */
+  plain?: boolean;
   label: string;
   value?: string;
   onPress?: () => void;
@@ -66,12 +76,33 @@ export function GroupedRow({
   const c = useColors();
   const showChevron = chevron ?? Boolean(onPress);
   const color = destructive ? c.danger : c.text;
+  const hasIcon = icon != null && icon !== false;
+  const iconNode = hasIcon
+    ? isValidElement(icon)
+      ? icon
+      : (
+          <PlatformIcon
+            name={icon as string}
+            size={plain ? 20 : 17}
+            color={plain ? (destructive ? c.danger : c.text) : iconTint}
+          />
+        )
+    : null;
   const inner = (
     <>
-      {icon ? (
-        <View style={[styles.iconWell, Platform.OS !== 'ios' && styles.iconWellMd, { backgroundColor: iconBg ?? c.lime }]}>
-          <PlatformIcon name={icon} size={16} color={iconTint} />
-        </View>
+      {hasIcon ? (
+        plain ? (
+          <View style={styles.plainIcon}>{iconNode}</View>
+        ) : (
+          <View
+            style={[
+              styles.iconWell,
+              Platform.OS !== 'ios' && styles.iconWellMd,
+              { backgroundColor: iconBg ?? c.lime },
+            ]}>
+            {iconNode}
+          </View>
+        )
       ) : null}
       <Text style={[styles.label, Platform.OS !== 'ios' && styles.labelMd, { color }]} numberOfLines={1}>
         {label}
@@ -82,7 +113,7 @@ export function GroupedRow({
         </Text>
       ) : null}
       {accessory}
-      {showChevron ? <PlatformIcon name="chevron.right" size={18} color={c.textTertiary} /> : null}
+      {showChevron ? <ChevronRight size={16} color={c.textTertiary} strokeWidth={2.2} /> : null}
     </>
   );
 
@@ -93,7 +124,11 @@ export function GroupedRow({
         accessibilityRole="button"
         accessibilityLabel={label}
         android_ripple={Platform.OS === 'android' ? { color: 'rgba(128,128,128,0.16)' } : undefined}
-        style={({ pressed }) => [styles.row, Platform.OS !== 'ios' && styles.rowMd, pressed && Platform.OS !== 'android' && { backgroundColor: c.chip }]}>
+        style={({ pressed }) => [
+          styles.row,
+          Platform.OS !== 'ios' && styles.rowMd,
+          pressed && Platform.OS !== 'android' && { backgroundColor: c.chip },
+        ]}>
         {inner}
       </Pressable>
     );
@@ -101,6 +136,11 @@ export function GroupedRow({
 
   return <View style={[styles.row, Platform.OS !== 'ios' && styles.rowMd]}>{inner}</View>;
 }
+
+export const GROUPED_INSETS = {
+  well: WELL_INSET,
+  plain: PLAIN_INSET,
+} as const;
 
 const styles = StyleSheet.create({
   section: {
@@ -143,9 +183,15 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   iconWell: {
-    width: ICON,
-    height: ICON,
-    borderRadius: 7,
+    width: WELL,
+    height: WELL,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  plainIcon: {
+    width: PLAIN_ICON,
+    height: PLAIN_ICON,
     alignItems: 'center',
     justifyContent: 'center',
   },
