@@ -81,7 +81,7 @@ export function AssetDetailPanel({
 
         <View style={[styles.card, { backgroundColor: cardBg }]}>
           <InfoRow label="价格" value={formatMoney(asset.purchasePrice, 2)} c={c} />
-          <InfoRow label="类别" value={categoryLabel} c={c} last />
+          <InfoRow label="类别" value={categoryLabel} c={c} />
           <InfoRow label="购买日期" value={formatChineseDate(asset.purchaseDate)} c={c} last />
         </View>
 
