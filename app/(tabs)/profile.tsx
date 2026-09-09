@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import {
@@ -11,7 +12,10 @@ import {
 } from 'lucide-react-native';
 import { Alert, Platform, StyleSheet, Switch, Text, View } from 'react-native';
 
+import { useAuth } from '@clerk/expo';
 import { GroupedRow, GroupedSection, GROUPED_INSETS } from '../../src/components/GroupedList';
+import { MigratePanel } from '../../src/cloud/MigratePanel';
+import { useCloudAssets } from '../../src/cloud/useCloudAssets';
 import { LargeTitleScreen } from '../../src/components/LargeTitleScreen';
 import { useOverview } from '../../src/hooks';
 import { LIME, numDisplay } from '../../src/theme';
@@ -28,7 +32,12 @@ export default function ProfileScreen() {
   const setColorScheme = useStore((s) => s.setColorScheme);
   const restoreDemo = useStore((s) => s.restoreDemo);
   const clearAll = useStore((s) => s.clearAll);
+  const { isSignedIn, signOut } = useAuth();
+  const { loadMigrated } = useCloudAssets();
   const dark = scheme === 'dark';
+  useEffect(() => {
+    if (isSignedIn) void loadMigrated();
+  }, [isSignedIn, loadMigrated]);
   const glyph = 20;
   const iconColor = c.text;
   const stroke = 2.2;
@@ -43,8 +52,10 @@ export default function ProfileScreen() {
           <View style={styles.heroText}>
             <Text style={[styles.name, { color: c.text }]}>衡物</Text>
             <View style={[styles.localPill, { backgroundColor: c.chip }]}>
-              <View style={[styles.localDot, { backgroundColor: c.success }]} />
-              <Text style={[styles.localText, { color: c.textSecondary }]}>本地账本</Text>
+              <View style={[styles.localDot, { backgroundColor: isSignedIn ? c.success : c.textTertiary }]} />
+              <Text style={[styles.localText, { color: c.textSecondary }]}>
+                {isSignedIn ? '已登录 · Clerk' : '本地账本'}
+              </Text>
             </View>
           </View>
         </View>
@@ -59,6 +70,30 @@ export default function ProfileScreen() {
           <Stat n={plans.length} l="攒钱计划" />
         </View>
       </GroupedSection>
+
+      {isSignedIn ? (
+        <GroupedSection header="云端" inset={GROUPED_INSETS.plain} footer="一键迁移会用本机 hengwu-db 全量替换云端。">
+          <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
+            <MigratePanel />
+          </View>
+          <GroupedRow
+            plain
+            label="退出登录"
+            destructive
+            onPress={() => {
+              void signOut();
+            }}
+          />
+        </GroupedSection>
+      ) : (
+        <GroupedSection header="云端" inset={GROUPED_INSETS.plain}>
+          <GroupedRow
+            plain
+            label="登录以同步云端"
+            onPress={() => router.push('/login')}
+          />
+        </GroupedSection>
+      )}
 
       <GroupedSection header="外观" inset={GROUPED_INSETS.plain}>
         <GroupedRow
@@ -114,7 +149,7 @@ export default function ProfileScreen() {
       <GroupedSection
         header="数据"
         inset={GROUPED_INSETS.plain}
-        footer="买入 · 服役 · 退役 · 卖出，把每件物品放上秤。数据只存在这台手机。">
+        footer="买入 · 服役 · 退役 · 卖出，把每件物品放上秤。登录后资产增删改走云 API。">
         <GroupedRow
           plain
           icon={<RotateCcw size={glyph} color={iconColor} strokeWidth={stroke} />}
