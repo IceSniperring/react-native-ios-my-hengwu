@@ -1,36 +1,50 @@
 import type { Asset } from '../types';
 import { cloudFetch, type TokenGetter } from './api';
 
-export type CloudAsset = Asset & {
-  updatedAt?: string;
-};
-
-export async function listAssets(getToken: TokenGetter) {
-  const res = await cloudFetch<{ assets: CloudAsset[] }>('/api/assets', getToken);
-  return res.assets ?? [];
+export async function fetchRemoteAssets(getToken: TokenGetter): Promise<Asset[]> {
+  const data = await cloudFetch<{ assets: Asset[] }>('/api/assets', getToken);
+  return data?.assets ?? [];
 }
 
-export async function createAsset(
+export async function createRemoteAsset(
   getToken: TokenGetter,
-  body: Omit<Asset, 'id'> & { id?: string },
-) {
-  return cloudFetch<CloudAsset>('/api/assets', getToken, {
+  asset: Asset,
+): Promise<Asset> {
+  const data = await cloudFetch<{ asset: Asset }>('/api/assets', getToken, {
     method: 'POST',
-    body: JSON.stringify(body),
+    body: JSON.stringify(asset),
   });
+  return data.asset;
 }
 
-export async function patchAsset(
+export async function patchRemoteAsset(
   getToken: TokenGetter,
   id: string,
   patch: Partial<Asset>,
-) {
-  return cloudFetch<CloudAsset>(`/api/assets/${encodeURIComponent(id)}`, getToken, {
+): Promise<Asset> {
+  const data = await cloudFetch<{ asset: Asset }>(`/api/assets/${id}`, getToken, {
     method: 'PATCH',
     body: JSON.stringify(patch),
   });
+  return data.asset;
 }
 
-export async function deleteAsset(getToken: TokenGetter, id: string) {
-  await cloudFetch(`/api/assets/${encodeURIComponent(id)}`, getToken, { method: 'DELETE' });
+export async function deleteRemoteAsset(getToken: TokenGetter, id: string): Promise<void> {
+  await cloudFetch(`/api/assets/${id}`, getToken, { method: 'DELETE' });
+}
+
+export async function postMigrate(
+  getToken: TokenGetter,
+  body: {
+    assets: unknown[];
+    wishes: unknown[];
+    plans: unknown[];
+    customCategories: unknown[];
+    tagLibrary: string[];
+  },
+) {
+  return cloudFetch<{ ok: boolean }>('/api/migrate', getToken, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
 }
