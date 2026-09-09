@@ -18,6 +18,7 @@ import Animated, {
 import Svg, { Path } from 'react-native-svg';
 import { swipeCategory } from '../homeUi';
 import { useStore } from '../store';
+import { FONT } from '../typography';
 import { useColors } from '../useColors';
 
 type Item = { id: string; label: string };
@@ -249,7 +250,9 @@ function TabLabel({
   }
 
   return (
-    <Text numberOfLines={1} style={[styles.label, { color, fontWeight: on ? '900' : '600' }]}>
+    <Text
+      numberOfLines={1}
+      style={[styles.label, { color, fontFamily: on ? FONT.extrabold : FONT.semibold }]}>
       {label}
     </Text>
   );
@@ -278,13 +281,13 @@ function CrossfadeLabel({
     <View style={styles.labelBox}>
       <Animated.Text
         numberOfLines={1}
-        style={[styles.label, { color: idleColor, fontWeight: '600' }, baseStyle]}>
+        style={[styles.label, { color: idleColor, fontFamily: FONT.semibold }, baseStyle]}>
         {label}
       </Animated.Text>
       <Animated.Text
         numberOfLines={1}
         accessibilityElementsHidden
-        style={[styles.label, styles.labelBold, { color: selectedColor, fontWeight: '900' }, boldStyle]}>
+        style={[styles.label, styles.labelBold, { color: selectedColor, fontFamily: FONT.extrabold }, boldStyle]}>
         {label}
       </Animated.Text>
     </View>
