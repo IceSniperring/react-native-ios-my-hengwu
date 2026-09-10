@@ -39,6 +39,15 @@ export const palettes = {
     success: '#34C759',
     imageBg: '#F2F2F7',
     badgeBg: 'rgba(255,255,255,0.92)',
+    /** Inline banner tints — must stay legible in both schemes. */
+    bannerWarnBg: '#EAF8A8',
+    bannerDangerBg: '#FFE5E5',
+    /** Modal / sheet backdrop. */
+    scrim: 'rgba(0,0,0,0.35)',
+    /** Foreground on a `tint`-colored fill (buttons, spinners). */
+    onTint: '#FFFFFF',
+    /** Foreground on the brand lime well. */
+    onLime: '#1C1C1E',
   },
   dark: {
     tint: '#0A84FF',
@@ -71,6 +80,11 @@ export const palettes = {
     success: '#30D158',
     imageBg: '#3A3A3C',
     badgeBg: 'rgba(44,44,46,0.92)',
+    bannerWarnBg: '#2E3A14',
+    bannerDangerBg: '#3A2326',
+    scrim: 'rgba(0,0,0,0.55)',
+    onTint: '#FFFFFF',
+    onLime: '#1C1C1E',
   },
 } as const;
 
