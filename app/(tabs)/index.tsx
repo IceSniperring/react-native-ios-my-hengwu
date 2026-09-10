@@ -7,7 +7,6 @@ import { Tabs, type CollapsingTabsRef, type TabBarRenderProps } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AddFab } from '../../src/components/AddFab';
-import { AuthGate } from '../../src/cloud/AuthGate';
 import { CloudWriteBanner } from '../../src/cloud/CloudWriteBanner';
 import { useCloudAssets } from '../../src/cloud/useCloudAssets';
 import { GlassIconButton } from '../../src/components/GlassIconButton';
@@ -87,22 +86,20 @@ export default function HomeScreen() {
   const renderTabBar = useCallback((props: TabBarRenderProps) => <HomeTabBar {...props} cats={cats} statusIndex={statusIndex} onStatusChange={onStatusChange} />, [cats, statusIndex, onStatusChange]);
 
   return (
-    <AuthGate>
-      <GestureHandlerRootView style={[styles.root, { backgroundColor: c.bg }]}>
-        <View style={[styles.topChrome, { paddingTop: insets.top, backgroundColor: c.bg }]}>
-          <View style={styles.topRow}>
-            <Pressable hitSlop={12} onPress={expandHeader} style={styles.titlePress}><Animated.Text style={[styles.compactTitle, { color: c.text }, compactTitleStyle]}>{selectMode ? `已选 ${selectedIds.size}` : '衡物'}</Animated.Text></Pressable>
-            <View style={styles.topActions}>{selectMode ? <GlassIconButton name="xmark" accessibilityLabel="退出选择" onPress={exitSelect} /> : <><GlassIconButton name="magnifyingglass" accessibilityLabel="搜索" onPress={() => router.push('/search')} /><GlassIconButton name="calendar" accessibilityLabel="购入日历" onPress={() => router.push('/calendar')} /></>}</View>
-          </View>
+    <GestureHandlerRootView style={[styles.root, { backgroundColor: c.bg }]}>
+      <View style={[styles.topChrome, { paddingTop: insets.top, backgroundColor: c.bg }]}>
+        <View style={styles.topRow}>
+          <Pressable hitSlop={12} onPress={expandHeader} style={styles.titlePress}><Animated.Text style={[styles.compactTitle, { color: c.text }, compactTitleStyle]}>{selectMode ? `已选 ${selectedIds.size}` : '衡物'}</Animated.Text></Pressable>
+          <View style={styles.topActions}>{selectMode ? <GlassIconButton name="xmark" accessibilityLabel="退出选择" onPress={exitSelect} /> : <><GlassIconButton name="magnifyingglass" accessibilityLabel="搜索" onPress={() => router.push('/search')} /><GlassIconButton name="calendar" accessibilityLabel="购入日历" onPress={() => router.push('/calendar')} /></>}</View>
         </View>
-        <CloudWriteBanner />
-        <Tabs.Container ref={tabsRef} renderHeader={renderHeader} renderTabBar={renderTabBar} minHeaderHeight={0} headerBackgroundColor={c.bg} headerContainerStyle={styles.headerOverflow} containerStyle={styles.body} initialTabName="all" pagerProps={{ offscreenPageLimit: Math.max(1, cats.length - 1) }}>
-          {cats.map((cat) => <Tabs.Tab key={cat.id} name={cat.id} label={cat.label}><CategoryPage rows={rowsByCat[cat.id] ?? []} cardW={cardW} gap={gap} pad={pad} bottomPad={bottomPad} selectMode={selectMode} selectedIds={selectedIds} onToggleSelect={toggleSelect} onEnterSelect={enterSelect} /></Tabs.Tab>)}
-        </Tabs.Container>
-        {selectMode && selectedIds.size > 0 ? <View pointerEvents="box-none" style={[selectBar.wrap, { bottom: insets.bottom + (Platform.OS === 'ios' ? 110 : 84) }]}><Pressable onPress={deleteSelected} style={({ pressed }) => [selectBar.btn, { backgroundColor: c.danger, opacity: pressed ? 0.88 : 1 }]}><Text style={[selectBar.btnText, { color: '#FFFFFF' }]}>删除 {selectedIds.size} 项</Text></Pressable></View> : null}
-        {!selectMode ? <AddFab accessibilityLabel="添加物品" onPress={() => router.push('/asset/form')} /> : null}
-      </GestureHandlerRootView>
-    </AuthGate>
+      </View>
+      <CloudWriteBanner />
+      <Tabs.Container ref={tabsRef} renderHeader={renderHeader} renderTabBar={renderTabBar} minHeaderHeight={0} headerBackgroundColor={c.bg} headerContainerStyle={styles.headerOverflow} containerStyle={styles.body} initialTabName="all" pagerProps={{ offscreenPageLimit: Math.max(1, cats.length - 1) }}>
+        {cats.map((cat) => <Tabs.Tab key={cat.id} name={cat.id} label={cat.label}><CategoryPage rows={rowsByCat[cat.id] ?? []} cardW={cardW} gap={gap} pad={pad} bottomPad={bottomPad} selectMode={selectMode} selectedIds={selectedIds} onToggleSelect={toggleSelect} onEnterSelect={enterSelect} /></Tabs.Tab>)}
+      </Tabs.Container>
+      {selectMode && selectedIds.size > 0 ? <View pointerEvents="box-none" style={[selectBar.wrap, { bottom: insets.bottom + (Platform.OS === 'ios' ? 110 : 84) }]}><Pressable onPress={deleteSelected} style={({ pressed }) => [selectBar.btn, { backgroundColor: c.danger, opacity: pressed ? 0.88 : 1 }]}><Text style={[selectBar.btnText, { color: '#FFFFFF' }]}>删除 {selectedIds.size} 项</Text></Pressable></View> : null}
+      {!selectMode ? <AddFab accessibilityLabel="添加物品" onPress={() => router.push('/asset/form')} /> : null}
+    </GestureHandlerRootView>
   );
 }
 
