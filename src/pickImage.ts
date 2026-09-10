@@ -20,6 +20,23 @@ export async function pickAssetImage() {
   return toSticker(res.assets[0].uri);
 }
 
+/**
+ * Square, cropped pick for a profile avatar. Unlike asset images this is not
+ * stickerized — avatars want a plain square crop.
+ */
+export async function pickAvatarImage() {
+  const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!perm.granted) return null;
+  const res = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images'],
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 0.8,
+  });
+  if (res.canceled || !res.assets[0]) return null;
+  return res.assets[0].uri;
+}
+
 export async function takeAssetPhoto() {
   const perm = await ImagePicker.requestCameraPermissionsAsync();
   if (!perm.granted) return null;
