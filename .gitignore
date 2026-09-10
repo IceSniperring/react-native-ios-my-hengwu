@@ -47,3 +47,6 @@ yarn-error.*
 .env
 .env.*
 !.env.example
+
+# brainstorm companion mockups
+.superpowers/

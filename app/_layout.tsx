@@ -7,7 +7,7 @@ import { useEffect, useMemo } from 'react';
 import { Appearance, Platform, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { CLERK_PUBLISHABLE_KEY } from '../src/cloud/config';
+import { CLERK_PUBLISHABLE_KEY, isClerkConfigured } from '../src/cloud/config';
 import { useStore } from '../src/store';
 import { FONT, useAppFonts } from '../src/typography';
 import { useColors } from '../src/useColors';
@@ -69,29 +69,37 @@ export default function RootLayout() {
     animation: Platform.OS === 'ios' ? ('default' as const) : ('slide_from_right' as const),
   };
 
-  const publishableKey = CLERK_PUBLISHABLE_KEY || 'pk_test_placeholder';
+  const app = (
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: c.bg }}>
+      <ThemeProvider value={navTheme}>
+        <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="asset/[id]" options={{ headerShown: false, animation: Platform.OS === 'ios' ? 'default' : 'slide_from_right', gestureEnabled: true, contentStyle: { backgroundColor: c.bg } }} />
+          <Stack.Screen name="asset/form" options={{ headerShown: false, presentation: 'modal', contentStyle: { backgroundColor: c.bg } }} />
+          <Stack.Screen name="pick/tags" options={{ headerShown: false, presentation: 'modal', contentStyle: { backgroundColor: c.bg } }} />
+          <Stack.Screen name="pick/category" options={{ headerShown: false, presentation: 'modal', contentStyle: { backgroundColor: c.bg } }} />
+          <Stack.Screen name="asset/sell" options={{ ...nativeHeader, presentation: 'modal', title: '卖出复盘' }} />
+          <Stack.Screen name="search" options={{ ...nativeHeader, title: '搜索', headerSearchBarOptions: { placeholder: '搜资产名称', hideWhenScrolling: false, cancelButtonText: '取消' } }} />
+          <Stack.Screen name="savings" options={{ ...nativeHeader, title: '智能攒钱' }} />
+          <Stack.Screen name="calendar" options={{ ...nativeHeader, title: '购入日历' }} />
+          <Stack.Screen name="manage/categories" options={{ ...nativeHeader, title: '分类' }} />
+          <Stack.Screen name="manage/tags" options={{ ...nativeHeader, title: '标签' }} />
+          <Stack.Screen name="login" options={{ headerShown: false, presentation: 'fullScreenModal', contentStyle: { backgroundColor: c.bg } }} />
+          <Stack.Screen name="profile/edit" options={{ ...nativeHeader, title: '编辑资料' }} />
+        </Stack>
+      </ThemeProvider>
+    </GestureHandlerRootView>
+  );
+
+  // Invalid/placeholder keys crash ClerkProvider — only wrap when configured.
+  if (!isClerkConfigured()) {
+    return app;
+  }
 
   return (
-    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <GestureHandlerRootView style={{ flex: 1, backgroundColor: c.bg }}>
-        <ThemeProvider value={navTheme}>
-          <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="asset/[id]" options={{ headerShown: false, animation: Platform.OS === 'ios' ? 'default' : 'slide_from_right', gestureEnabled: true, contentStyle: { backgroundColor: c.bg } }} />
-            <Stack.Screen name="asset/form" options={{ headerShown: false, presentation: 'modal', contentStyle: { backgroundColor: c.bg } }} />
-            <Stack.Screen name="pick/tags" options={{ headerShown: false, presentation: 'modal', contentStyle: { backgroundColor: c.bg } }} />
-            <Stack.Screen name="pick/category" options={{ headerShown: false, presentation: 'modal', contentStyle: { backgroundColor: c.bg } }} />
-            <Stack.Screen name="asset/sell" options={{ ...nativeHeader, presentation: 'modal', title: '卖出复盘' }} />
-            <Stack.Screen name="search" options={{ ...nativeHeader, title: '搜索', headerSearchBarOptions: { placeholder: '搜资产名称', hideWhenScrolling: false, cancelButtonText: '取消' } }} />
-            <Stack.Screen name="savings" options={{ ...nativeHeader, title: '智能攒钱' }} />
-            <Stack.Screen name="calendar" options={{ ...nativeHeader, title: '购入日历' }} />
-            <Stack.Screen name="manage/categories" options={{ ...nativeHeader, title: '分类' }} />
-            <Stack.Screen name="manage/tags" options={{ ...nativeHeader, title: '标签' }} />
-            <Stack.Screen name="login" options={{ headerShown: false, presentation: 'modal', contentStyle: { backgroundColor: c.bg } }} />
-          </Stack>
-        </ThemeProvider>
-      </GestureHandlerRootView>
+    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
+      {app}
     </ClerkProvider>
   );
 }

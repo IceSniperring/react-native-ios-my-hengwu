@@ -1,34 +1,56 @@
-import { useAuth, useSignIn, useSignUp } from '@clerk/expo/legacy';
+import { useAuth } from '@clerk/expo';
 import { useHostedAuth } from '@clerk/expo/hosted-auth';
+import { useSignIn, useSignUp } from '@clerk/expo/legacy';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { Keyboard, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { LIME } from '../src/theme';
+import { GlassSurface } from '../src/components/GlassSurface';
+import { PlatformIcon } from '../src/native/PlatformIcon';
+import type { LoginMode } from '../src/native/forms';
+import { LoginForm } from '../src/native/LoginForm';
+import { useStore } from '../src/store';
 import { FONT } from '../src/typography';
 import { useColors } from '../src/useColors';
 
+/**
+ * Sign-in screen.
+ *
+ * Presented full screen (`presentation: 'fullScreenModal'`) — the default
+ * `'modal'` maps to an iOS page sheet, which by design leaves a gap at the top
+ * showing the screen behind it.
+ */
 export default function LoginScreen() {
   const c = useColors();
   const insets = useSafeAreaInsets();
+  const scheme = useStore((s) => s.colorScheme);
   const { isSignedIn, isLoaded: authLoaded } = useAuth();
   const { signIn, setActive, isLoaded: signInLoaded } = useSignIn();
   const { signUp, isLoaded: signUpLoaded } = useSignUp();
   const { startHostedAuth } = useHostedAuth();
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [mode, setMode] = useState<LoginMode>('signin');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    if (authLoaded && isSignedIn) router.replace('/(tabs)');
-  }, [authLoaded, isSignedIn]);
+  // This route can also be entered directly (deep link), where there is no
+  // screen to pop — a bare back() would throw an unhandled GO_BACK.
+  const leave = useCallback(() => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/(tabs)');
+  }, []);
 
-  const onSubmit = async () => {
+  useEffect(() => {
+    if (authLoaded && isSignedIn) leave();
+  }, [authLoaded, isSignedIn, leave]);
+
+  const onSubmit = async (email: string, password: string) => {
     setError(null);
-    if (!email.trim() || !password) return setError('请输入邮箱和密码');
+    if (!email.trim() || !password) {
+      setError('请输入邮箱和密码');
+      return;
+    }
     setBusy(true);
     try {
       if (mode === 'signin') {
@@ -36,7 +58,7 @@ export default function LoginScreen() {
         const result = await signIn.create({ identifier: email.trim(), password });
         if (result.status === 'complete' && result.createdSessionId) {
           await setActive!({ session: result.createdSessionId });
-          router.replace('/(tabs)');
+          leave();
           return;
         }
         setError('账号或密码不正确，请重试');
@@ -47,10 +69,15 @@ export default function LoginScreen() {
         setMode('signin');
       }
     } catch (e: unknown) {
-      const msg = e && typeof e === 'object' && 'errors' in e
-        ? String((e as { errors?: { message?: string }[] }).errors?.[0]?.message ?? '')
-        : e instanceof Error ? e.message : '';
-      setError(/network|fetch|Failed/i.test(msg) ? '网络异常，请检查连接后重试' : msg || '账号或密码不正确，请重试');
+      const msg =
+        e && typeof e === 'object' && 'errors' in e
+          ? String((e as { errors?: { message?: string }[] }).errors?.[0]?.message ?? '')
+          : e instanceof Error
+            ? e.message
+            : '';
+      setError(
+        /network|fetch|Failed/i.test(msg) ? '网络异常，请检查连接后重试' : msg || '账号或密码不正确，请重试',
+      );
     } finally {
       setBusy(false);
     }
@@ -69,31 +96,69 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={[styles.fill, { backgroundColor: c.bg, paddingTop: insets.top + 12 }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={styles.header}><Pressable onPress={() => router.back()} hitSlop={12}><Text style={{ color: c.tint, fontSize: 16 }}>关闭</Text></Pressable></View>
-      <View style={styles.body}>
-        <View style={[styles.logo, { backgroundColor: LIME }]}><Text style={styles.logoGlyph}>衡</Text></View>
-        <Text style={[styles.title, { color: c.text }]}>登录以同步云端</Text>
-        <Text style={[styles.sub, { color: c.textSecondary }]}>云端第一刀：登录必选（Clerk）。本地账本可一键上云。</Text>
-        <View style={[styles.seg, { backgroundColor: c.chip }]}>
-          <Pressable onPress={() => setMode('signin')} style={[styles.segItem, mode === 'signin' && { backgroundColor: c.surface }]}><Text style={{ color: c.text, fontFamily: FONT.semibold, fontSize: 13 }}>邮箱密码</Text></Pressable>
-          <Pressable onPress={onHosted} style={styles.segItem}><Text style={{ color: c.textSecondary, fontSize: 13 }}>浏览器登录</Text></Pressable>
-        </View>
-        <TextInput autoCapitalize="none" keyboardType="email-address" autoComplete="email" placeholder="邮箱" placeholderTextColor={c.textTertiary} value={email} onChangeText={setEmail} style={[styles.input, { backgroundColor: c.input, color: c.text, borderColor: c.line }]} />
-        <TextInput secureTextEntry autoComplete="password" placeholder="密码" placeholderTextColor={c.textTertiary} value={password} onChangeText={setPassword} style={[styles.input, { backgroundColor: c.input, color: c.text, borderColor: c.line }]} />
-        {error ? <Text style={[styles.err, { color: c.danger }]}>{error}</Text> : null}
-        <Pressable disabled={busy} onPress={() => void onSubmit()} style={[styles.cta, { backgroundColor: c.tint, opacity: busy ? 0.7 : 1 }]}>{busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.ctaText}>{mode === 'signin' ? '登录' : '注册'}</Text>}</Pressable>
-        <Pressable onPress={() => setMode(mode === 'signin' ? 'signup' : 'signin')}><Text style={{ color: c.tint, marginTop: 16, fontSize: 14 }}>{mode === 'signin' ? '还没有账号？注册' : '已有账号？登录'}</Text></Pressable>
-        <Text style={[styles.foot, { color: c.textTertiary }]}>由 Clerk 接入</Text>
+    // Tapping anywhere that isn't a control dismisses the keyboard: touches on
+    // the buttons below are claimed by those Pressables, so they never reach
+    // this ancestor.
+    <Pressable
+      accessible={false}
+      onPress={Keyboard.dismiss}
+      style={[styles.fill, { backgroundColor: c.bg, paddingTop: insets.top }]}>
+      {/* Brand wash. Its real job is to give the Liquid Glass controls
+          something to refract — on a flat fill the material is invisible. */}
+      <LinearGradient
+        pointerEvents="none"
+        colors={
+          scheme === 'dark'
+            ? ['rgba(169,214,46,0.16)', 'rgba(169,214,46,0)']
+            : ['rgba(169,214,46,0.22)', 'rgba(169,214,46,0)']
+        }
+        style={styles.glow}
+      />
+
+      <View style={styles.topBar}>
+        <GlassSurface
+          interactive
+          glassStyle="clear"
+          style={styles.close}
+          fallbackStyle={{ backgroundColor: c.chip }}>
+          <Pressable
+            onPress={leave}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="关闭"
+            style={({ pressed }) => [styles.closeHit, { opacity: pressed ? 0.6 : 1 }]}>
+            <PlatformIcon name="xmark" size={15} color={c.text} />
+          </Pressable>
+        </GlassSurface>
       </View>
-    </KeyboardAvoidingView>
+
+      <View style={styles.body}>
+        <LoginForm
+          mode={mode}
+          busy={busy}
+          error={error}
+          onSubmit={onSubmit}
+          onHosted={onHosted}
+          onToggleMode={() => {
+            setError(null);
+            setMode((m) => (m === 'signin' ? 'signup' : 'signin'));
+          }}
+        />
+      </View>
+
+      <Text style={[styles.foot, { color: c.textTertiary }]}>由 Clerk 提供</Text>
+      {/* Clerk bot protection requires this mount point on custom sign-up screens. */}
+      <View nativeID="clerk-captcha" />
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1 }, header: { paddingHorizontal: 20, marginBottom: 8 }, body: { flex: 1, paddingHorizontal: 24, alignItems: 'center', paddingTop: 24 },
-  logo: { width: 64, height: 64, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 16 }, logoGlyph: { fontFamily: FONT.extrabold, fontSize: 28, color: '#1C1C1E' },
-  title: { fontFamily: FONT.bold, fontSize: 22, marginBottom: 8 }, sub: { fontSize: 14, lineHeight: 20, textAlign: 'center', marginBottom: 20 }, seg: { flexDirection: 'row', borderRadius: 10, padding: 3, marginBottom: 16, alignSelf: 'stretch' }, segItem: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 8 },
-  input: { alignSelf: 'stretch', borderWidth: StyleSheet.hairlineWidth, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 14, fontSize: 16, marginBottom: 12, fontFamily: FONT.regular }, err: { alignSelf: 'stretch', fontSize: 13, marginBottom: 8 },
-  cta: { alignSelf: 'stretch', borderRadius: 14, paddingVertical: 14, alignItems: 'center', marginTop: 4 }, ctaText: { color: '#fff', fontFamily: FONT.semibold, fontSize: 16 }, foot: { marginTop: 28, fontSize: 12 },
+  fill: { flex: 1 },
+  glow: { position: 'absolute', top: 0, left: 0, right: 0, height: 340 },
+  topBar: { height: 44, paddingHorizontal: 20, alignItems: 'flex-end', justifyContent: 'center' },
+  close: { width: 32, height: 32, borderRadius: 16, overflow: 'hidden' },
+  closeHit: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  body: { flex: 1, paddingTop: Platform.OS === 'ios' ? 32 : 24 },
+  foot: { textAlign: 'center', fontSize: 12, fontFamily: FONT.regular, paddingBottom: 28 },
 });
