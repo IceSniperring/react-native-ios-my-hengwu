@@ -42,3 +42,8 @@ yarn-error.*
 
 # local screenshot references
 .refs/
+
+# env (never commit secrets)
+.env
+.env.*
+!.env.example
