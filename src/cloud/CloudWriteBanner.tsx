@@ -14,7 +14,7 @@ export function CloudWriteBanner() {
   if (!writeError) return null;
 
   return (
-    <View style={[styles.wrap, { backgroundColor: '#FFE5E5', borderColor: c.danger }]}>
+    <View style={[styles.wrap, { backgroundColor: c.bannerDangerBg, borderColor: c.danger }]}>
       <Text style={[styles.msg, { color: c.danger }]} numberOfLines={2}>
         {writeError}
       </Text>
@@ -24,7 +24,7 @@ export function CloudWriteBanner() {
         }}
         hitSlop={8}
         style={[styles.btn, { backgroundColor: c.danger }]}>
-        <Text style={styles.btnText}>重试</Text>
+        <Text style={[styles.btnText, { color: c.onTint }]}>重试</Text>
       </Pressable>
     </View>
   );
@@ -55,7 +55,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   btnText: {
-    color: '#fff',
     fontSize: 13,
     fontFamily: FONT.semibold,
   },

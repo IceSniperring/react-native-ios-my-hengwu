@@ -1,20 +1,14 @@
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { ConfirmDialog } from '../native/ConfirmDialog';
 import { useStore } from '../store';
 import { FONT } from '../typography';
 import { useColors } from '../useColors';
 import { useCloudUiStore } from './cloudUiStore';
 import { useCloudAssets } from './useCloudAssets';
 
-/** One-tap migrate entry + confirm sheet (prototype copy). */
+/** One-tap migrate entry + confirmation dialog (native on iOS). */
 export function MigratePanel() {
   const c = useColors();
   const assets = useStore((s) => s.assets);
@@ -30,7 +24,7 @@ export function MigratePanel() {
 
   if (migrated) {
     return (
-      <View style={[styles.banner, { backgroundColor: '#EAF8A8' }]}>
+      <View style={[styles.banner, { backgroundColor: c.bannerWarnBg }]}>
         <Text style={[styles.bannerText, { color: c.text }]}>云端已同步 · 换机登录可继续</Text>
       </View>
     );
@@ -38,7 +32,7 @@ export function MigratePanel() {
 
   return (
     <View style={{ gap: 10 }}>
-      <View style={[styles.banner, { backgroundColor: '#EAF8A8' }]}>
+      <View style={[styles.banner, { backgroundColor: c.bannerWarnBg }]}>
         <View style={{ flex: 1, gap: 4 }}>
           <Text style={[styles.bannerText, { color: c.text }]}>本地数据尚未上云</Text>
           <Text style={{ fontSize: 12, color: c.textSecondary, lineHeight: 16 }}>
@@ -56,40 +50,24 @@ export function MigratePanel() {
         onPress={() => setSheet(true)}
         style={[styles.cta, { backgroundColor: c.tint, opacity: migrating ? 0.7 : 1 }]}>
         {migrating ? (
-          <ActivityIndicator color="#fff" />
+          <ActivityIndicator color={c.onTint} />
         ) : (
-          <Text style={styles.ctaText}>一键迁移到云端</Text>
+          <Text style={[styles.ctaText, { color: c.onTint }]}>一键迁移到云端</Text>
         )}
       </Pressable>
 
-      <Modal visible={sheet} transparent animationType="slide" onRequestClose={() => setSheet(false)}>
-        <Pressable style={styles.sheetBackdrop} onPress={() => setSheet(false)}>
-          <Pressable
-            style={[styles.sheet, { backgroundColor: c.surface }]}
-            onPress={(e) => e.stopPropagation()}>
-            <Text style={[styles.sheetTitle, { color: c.text }]}>用本机数据替换云端？</Text>
-            <Text style={{ color: c.textSecondary, fontSize: 14, lineHeight: 20, marginTop: 8 }}>
-              此操作不可撤销。云端现有资产将被本机这份替换。失败可重试，本机数据保留。
-            </Text>
-            <Pressable
-              disabled={migrating}
-              onPress={async () => {
-                const ok = await migrateToCloud();
-                if (ok) setSheet(false);
-              }}
-              style={[styles.cta, { backgroundColor: c.tint, marginTop: 16 }]}>
-              {migrating ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.ctaText}>确认替换并迁移</Text>
-              )}
-            </Pressable>
-            <Pressable onPress={() => setSheet(false)} style={{ marginTop: 12, alignItems: 'center' }}>
-              <Text style={{ color: c.textSecondary, fontSize: 15 }}>取消</Text>
-            </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
+      <ConfirmDialog
+        visible={sheet}
+        title="用本机数据替换云端？"
+        message="此操作不可撤销。云端现有资产将被本机这份替换。失败可重试，本机数据保留。"
+        confirmLabel="确认替换并迁移"
+        destructive
+        busy={migrating}
+        onCancel={() => setSheet(false)}
+        onConfirm={() => {
+          void migrateToCloud();
+        }}
+      />
     </View>
   );
 }
@@ -109,17 +87,5 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
   },
-  ctaText: { color: '#fff', fontFamily: FONT.semibold, fontSize: 16 },
-  sheetBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 24,
-    paddingBottom: 36,
-  },
-  sheetTitle: { fontFamily: FONT.bold, fontSize: 18 },
+  ctaText: { fontFamily: FONT.semibold, fontSize: 16 },
 });
